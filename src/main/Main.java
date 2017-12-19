@@ -1,9 +1,12 @@
 package main;
 
+import client.GameOfLifeClient;
+
 public class Main {
 	
 	public static void main(String[] args) {
-		new GameOfLife(10);
+//		new GameOfLifeLocal(10);
+		new GameOfLifeClient();
 	}
 	
 }

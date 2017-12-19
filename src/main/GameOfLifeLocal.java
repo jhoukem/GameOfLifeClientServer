@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import javax.swing.JFrame;
 
 import model.GridModel;
+import utils.UtilsFunctions;
 import view.GridView;
 
 /**
@@ -14,7 +15,7 @@ import view.GridView;
  * @author Jean-Hugo
  *
  */
-public class GameOfLife extends JFrame{
+public class GameOfLifeLocal extends JFrame{
 
 	/**
 	 * 
@@ -31,10 +32,7 @@ public class GameOfLife extends JFrame{
 	// The class that allow to visualize the simulation.
 	private GridView gridView;
 	
-	// The cycle counter that represent the current iteration number.
-	private int cycle = 0;
-
-	public GameOfLife(int size) {
+	public GameOfLifeLocal(int size) {
 		
 		this.gridModel = new GridModel(size);
 		this.gridView = new GridView(gridModel);
@@ -53,21 +51,11 @@ public class GameOfLife extends JFrame{
 
 	public void start(){
 		while(true){
-			System.out.println("Cycle number "+cycle++);
 			gridView.displayGridAscii();
 			gridView.repaint();
-			sleep(1);
+			UtilsFunctions.sleep(1);
 			gridModel.update();
 		}
-	}
-
-
-	private void sleep(int i) {
-		try {
-			Thread.sleep(i*1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
 	}
 
 }

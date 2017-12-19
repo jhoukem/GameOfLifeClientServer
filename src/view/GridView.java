@@ -75,6 +75,7 @@ public class GridView extends JPanel{
 		int gridSize = gridModel.getActualSize();
 		boolean grid [][] = gridModel.getGrid();
 
+		System.out.println("Generation n "+gridModel.getCycle());
 		for (int i = 0; i < gridSize; i++) {
 			for (int j = 0; j < gridSize; j++) {
 				if(grid[i][j]){

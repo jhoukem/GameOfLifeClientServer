@@ -9,9 +9,9 @@ package model;
 public class GridModel {
 
 	// The maximum size that a grid can take.
-	private static final int MAXIMUM_GRID_SIZE = 100;
+	public static final int MAXIMUM_GRID_SIZE = 100;
 	// The size of the grid by default.
-	private static final int DEFAULT_SIZE = 10;
+	public static final int DEFAULT_SIZE = 10;
 
 	// A 2 dimensional array that represent the current simulation (true = cell alive, false = dead_cell).
 	private boolean grid[][] = new boolean[MAXIMUM_GRID_SIZE][MAXIMUM_GRID_SIZE];
@@ -21,6 +21,12 @@ public class GridModel {
 	// The current size of the grid.
 	private int currentSize = DEFAULT_SIZE;
 
+	// The cycle counter that represent the current iteration number.
+	private int cycle = 0;
+
+	public GridModel() {
+		this(DEFAULT_SIZE);
+	}
 
 	public GridModel(int size) {
 
@@ -53,11 +59,16 @@ public class GridModel {
 		}
 	}
 
+	public void resetGrid(){
+		cycle = 0;
+		setAllGridsTo(false);
+	}
+
 	/**
 	 * Process one simulation step.
 	 */
 	public void update() {
-
+		cycle++;
 		for(int i = 0; i < currentSize; i++){
 			for (int j = 0; j < currentSize; j++) {
 				int neighborsCount = getCellNeighbours(i, j);
@@ -112,7 +123,7 @@ public class GridModel {
 	 * @return the correct corresponding value in the grid.
 	 */
 	private int getCorrectPosition(int value) {
-		
+
 		if(value < 0) {
 			return currentSize - 1;
 		} else if(value >= currentSize){
@@ -131,6 +142,10 @@ public class GridModel {
 				gridReference[i][j] = grid[i][j];
 			}
 		}
+	}
+
+	public int getCycle() {
+		return cycle;
 	}
 
 	public boolean[][] getGrid() {
