@@ -20,7 +20,6 @@ import model.GridModel;
 import networkcontrollers.ClientGridController;
 import server.ServerListener;
 import utils.Constants;
-import utils.Timer;
 import view.CommandPanel;
 import view.GridView;
 
@@ -36,7 +35,6 @@ public class GameOfLifeClient extends JFrame{
 	 */
 	private static final long serialVersionUID = 1L;
 
-
 	// The grid that hold the game simulation.
 	private GridModel gridModel;
 	// The class that allow to visualize the simulation.
@@ -47,39 +45,45 @@ public class GameOfLifeClient extends JFrame{
 	private JPanel viewPanel;
 	// This button is used to connect to a server.
 	private JButton connect;
-
 	// This thread run a client listener.
 	private Thread clientListenerThread;
-	// This runnable listen on the network for server messages.
-	private ClientListener clientListener;
-
 	// This class handle all the updates from the network.
 	private ClientGridController clientController;
-
 	// This socket allow the client to communicate with the server.
 	private SocketChannel clientSocket;
 
-	private Timer timer = new Timer();
+	/**
+	 * By default the game open a window.
+	 */
+	public GameOfLifeClient(){
+		this(true);
+	}
 
-	public GameOfLifeClient() {
+	/**
+	 * 
+	 * @param visible Whether the game should open a JFrame. Useful for testing purpose.
+	 */
+	public GameOfLifeClient(boolean visible) {
 
 		gridModel = new GridModel();
-		initGraphics();
-		clientController = new ClientGridController(gridModel, timer, commandPanel);
+		initGraphics(visible);
+		clientController = new ClientGridController(gridModel, commandPanel);
 
-		askConnection();
-		//				initNetwork("");
-		start();
+		// If the window is open ask for a server ip.
+		if(visible){
+			askConnection();
+		}
 	}
 
 	private void askConnection() {
 		String ip = JOptionPane.showInputDialog(null, "Server IP");
 		if(ip != null && !ip.isEmpty()){
-			initNetwork(ip);
+			connectTo(ip);
+			start();
 		}
 	}
 
-	private void initGraphics() {
+	private void initGraphics(boolean visible) {
 
 		// Init the buttons.
 		connect = new JButton("Connection");
@@ -112,47 +116,54 @@ public class GameOfLifeClient extends JFrame{
 		this.setSize(Constants.WIDTH, Constants.HEIGHT);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setVisible(true);
+		this.setVisible(visible);
 	}
 
-	private void initNetwork(String ip) {
+	public void connectTo(String ip) {
 		initSocket(ip);
 		initNetworkListener();
 	}
 
 	private void initSocket(String ip) {
 		try {
-			// A previous socket existed.
+			// If a previous socket existed we close it.
 			if(clientSocket != null){
 				clientSocket.close();
 			}
-			clientSocket = SocketChannel.open(new InetSocketAddress("127.0.0.1" , ServerListener.SERVER_PORT));
+			clientSocket = SocketChannel.open(new InetSocketAddress(ip , ServerListener.SERVER_PORT));
 			commandPanel.setSocket(clientSocket);
 			System.out.println("Connected to the server: "+clientSocket.socket().getRemoteSocketAddress());
-			JOptionPane.showMessageDialog(null, "Connection successful");
+			if(isVisible()){
+				JOptionPane.showMessageDialog(null, "Connection successful");
+			}
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "Connection failed");
+			if(isVisible()) {
+				JOptionPane.showMessageDialog(null, "Connection failed");
+			} else {
+				// If the game is not visible this should be a test and thus we want to log error.
+				e.printStackTrace();
+			}
 		}
 	}
 
 	private void initNetworkListener() {
-
-		clientListener = new ClientListener(clientSocket, clientController);
-		clientListenerThread = new Thread(clientListener);
+		// No need to keep a reference since the runnable will stop when the socket is closed.
+		clientListenerThread = new Thread(new ClientListener(clientSocket, clientController));
 		clientListenerThread.start();
 	}
 
-	public void start(){
-		while(true){
-
-			if(isConnected()){
-				clientController.processPendingCommands();
-			}
+	private void start(){
+		while(isConnected()){
+			clientController.processPendingCommands();
 		}
 	}
 
 	private boolean isConnected() {
 		return clientSocket != null && clientSocket.isConnected();
 	}
-
+	
+	public ClientGridController getClientController(){
+		return clientController;
+	}
+	
 }

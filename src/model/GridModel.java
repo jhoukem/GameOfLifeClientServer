@@ -13,7 +13,7 @@ import utils.Constants;
  */
 public class GridModel extends Observable{
 
-	
+
 	// The maximum size that a grid can take.
 	transient public static final int MAXIMUM_GRID_SIZE = 100;
 	// The size of the grid by default.
@@ -31,7 +31,7 @@ public class GridModel extends Observable{
 	private int cycle = 0;
 
 	// The time in millisecond between each call to update.
-	private int updateRate = 3000;
+	private int updateRate = 5000;
 
 	// Default interval for a living cell to stay alive.
 	private int minInterval = 2;
@@ -67,9 +67,14 @@ public class GridModel extends Observable{
 	}
 
 	public void tata() {
-		createBar(currentGridSize/2, currentGridSize/2);
+//		setAllGridsTo(true);
+//		setCell(currentGridSize-1, currentGridSize-1, true);
+		
+		/*createBar(currentGridSize/2, currentGridSize/2);
+		createBar(currentGridSize/2+1, currentGridSize/2);
+		createBar(currentGridSize/2-1, currentGridSize/2);
 
-		setCell(0, 0, true);
+		/*setCell(0, 0, true);
 		setCell(0, 1, true);
 		setCell(1, 0, true);
 		setCell(1, 1, true);
@@ -98,8 +103,8 @@ public class GridModel extends Observable{
 		setCell(8, 8, true);
 		setCell(3, 3, true);
 		setCell(7, 3, true);
-		setCell(5, 6, true);
-		
+		setCell(5, 6, true);*/
+
 		notifyObservers();
 	}
 
@@ -284,7 +289,7 @@ public class GridModel extends Observable{
 		BitSet bs = new BitSet();
 		for (int i = 0; i < currentGridSize; i++) {
 			for (int j = 0; j < currentGridSize; j++) {
-				int idx = currentGridSize*i + j;
+				int idx = currentGridSize * i + j;
 				if(grid[i][j]){
 					bs.set(idx);
 				} else {
@@ -292,6 +297,14 @@ public class GridModel extends Observable{
 				}
 			}
 		}
+
+		int gridCellCount = getAliveCellCount();
+		int bitSetCount = bs.cardinality();
+		if(gridCellCount != bitSetCount){
+			System.err.println("[Server] Error the bitfield contains "+ bitSetCount +" living cell but the grid has "+gridCellCount);
+		}
+		
+		
 		return bs;
 	}
 
@@ -301,23 +314,37 @@ public class GridModel extends Observable{
 	 */
 	public void populateWithSnapshot(BitSet bs) {
 
-
-		for (int i = 0; i < bs.size(); i++) {
-			int row = i / currentGridSize;
-			int col = i % currentGridSize;
-			grid[row][col] = bs.get(i);
-		}
-
-		// If we haven't received any bit for the rest of the array, it mean it is empty.
-		if(bs.size() < currentGridSize*currentGridSize){
-			for (int i = bs.size()/currentGridSize; i < currentGridSize; i++) {
-				for (int j = bs.size()%currentGridSize; j < currentGridSize; j++) {
-					grid[i][j] = false;
-				}
+		for (int i = 0; i < currentGridSize; i++) {
+			for (int j = 0; j < currentGridSize; j++) {
+				boolean alive = bs.get(currentGridSize * i +j);
+				setCell(i, j, alive);
 			}
 		}
 
+		int gridCellCount = getAliveCellCount();
+		int bitSetCount = bs.cardinality();
+		
+		if(gridCellCount != bitSetCount){
+			System.err.println("[Client] Error the bitfield contains "+ bitSetCount +" living cell but the grid has "+gridCellCount);
+		}
+		
 		notifyObservers();
+	}
+
+	/**
+	 * Return the number of cell alive in the current simulation.
+	 * @return
+	 */
+	public int getAliveCellCount(){
+		int total = 0;
+		for (int i = 0; i < currentGridSize; i++) {
+			for (int j = 0; j < currentGridSize; j++) {
+				if(grid[i][j]){
+					total++;
+				}
+			}
+		}
+		return total;
 	}
 
 	public void setCellRequirement(int min, int max) {
@@ -337,7 +364,7 @@ public class GridModel extends Observable{
 	public int getMinimumCellRequirement() {
 		return minInterval;
 	}
-	
+
 	public int getMaximumCellRequirement() {
 		return maxInterval;
 	}

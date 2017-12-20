@@ -5,7 +5,9 @@ import game.GameOfLifeServer;
 public class LaunchServer {
 
 	public static void main(String[] args) {
-		new GameOfLifeServer();
+		GameOfLifeServer server = new GameOfLifeServer();
+		// Start the game simulation.
+		server.start();
 	}
 	
 }

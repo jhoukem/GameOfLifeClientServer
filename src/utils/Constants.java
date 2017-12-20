@@ -23,6 +23,8 @@ public class Constants {
 	public static final int BUFFER_SIZE = 2048;
 	public static final int MAXIMUM_CELL_NEIGHBORS = 8;
 	public static final int MINIMUM_CELL_NEIGHBORS = 0;
+	
+	public static final boolean DEBUG_BITSET = false;
 
 
 }

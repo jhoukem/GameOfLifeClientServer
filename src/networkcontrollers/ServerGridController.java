@@ -21,20 +21,29 @@ public class ServerGridController extends NetworkedGridController{
 
 	// Used to retrieve connected players.
 	private Selector selector;
+	// The timer used to calculate when the game need to be updated.
+	protected Timer timer;
 
 	public ServerGridController(GridModel gridModel, Timer timer) {
-		super(gridModel, timer);
+		super(gridModel);
+		this.timer = timer;
 	}
 
 	@Override
 	protected void processGridReset() {
 		super.processGridReset();
+		timer.resetTimer();
 		// Server side a reset trigger a randomized world.
 		gridModel.populateRandomly();
-//		gridModel.tata();
+		//		gridModel.tata();
 	}
 
-	public void sendWorldSnapShot() {
+	/**
+	 * Send a world snapshot to the connected client.
+	 * 
+	 * @return The BitSet representing the world current state.
+	 */
+	public BitSet sendWorldSnapShotToClients() {
 
 		BitSet bs = gridModel.getWorldSnapShot();
 
@@ -58,45 +67,53 @@ public class ServerGridController extends NetworkedGridController{
 					UtilsFunctions.displayBitField(bs, "On send");
 				}
 
-				clientChannel.write(ByteBuffer.wrap(toSend));
+				int byteSend = clientChannel.write(ByteBuffer.wrap(toSend));
 
+				if(Constants.DEBUG_BITSET){
+					System.out.println("[Server] send "+byteSend+" bytes");
+					System.out.println("[Server] string snapshot = "+ new String(bs.toByteArray()).toString());
+					System.out.println("[Server] bitSetCardinality = "+bs.cardinality());
+				}
+
+				return bs;
 			} catch (IOException e) {
 				selectionKey.cancel();
 				e.printStackTrace();
 			}
 		}
-
+		return null;
 	}
 
-	public void setSelector(Selector selector) {
-		this.selector = selector;
-	}
 
 	public byte[] getInitializationMessage() {
-		
+
 		byte[] code = Constants.GRID_INITIALIZATION.getBytes();
-		
+
 		byte[] gridSize = new String(""+gridModel.getCurrentGridSize()).getBytes();
 		byte[] byteToReadForGridSize = {(byte) gridSize.length};
-		
+
 		byte[] gridUpdateRate = new String(""+(int)gridModel.getUpdateRate()).getBytes();
 		byte[] byteToReadForUpdateRate = {(byte) gridUpdateRate.length};
-		
+
 		byte[] minCellRequirement = new String(""+gridModel.getMinimumCellRequirement()).getBytes();
 		byte[] maxCellRequirement = new String(""+gridModel.getMaximumCellRequirement()).getBytes();
-		
+
 		byte[] snapshot = gridModel.getWorldSnapShot().toByteArray();
-		
+
 		if(DEBUG){
 			System.out.println("bytetoReadForGridSize size = "+ byteToReadForGridSize.length);
 			System.out.println("byte to read value = "+ byteToReadForGridSize[0]);
 			System.out.println("grid size length = "+gridSize.length);
 		}
-		
+
 		return UtilsFunctions.concatArray(code, byteToReadForGridSize, gridSize,
 				byteToReadForUpdateRate, gridUpdateRate,
 				minCellRequirement, maxCellRequirement,
 				snapshot);
+	}
+
+	public void setSelector(Selector selector) {
+		this.selector = selector;
 	}
 
 

@@ -27,8 +27,6 @@ public class ServerListener implements Runnable{
 	private ServerGridController serverController;
 
 	// A list that keep a reference to all the connected client sockets.
-	//private ArrayList<Socket> clientSockets = new ArrayList<>();
-	// A list that keep a reference to all the connected client sockets.
 	//private ArrayList<SocketChannel> clientSockets = new ArrayList<SocketChannel>();
 
 	private Selector selector;

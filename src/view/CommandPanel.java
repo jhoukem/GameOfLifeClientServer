@@ -110,15 +110,13 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		gridUpdateRateSlider.addChangeListener(this);
 
 		minimumNeighborsSlider = new JSlider(Constants.MINIMUM_CELL_NEIGHBORS, Constants.MAXIMUM_CELL_NEIGHBORS);
-		minimumNeighborsSlider.setMajorTickSpacing(5);
-		minimumNeighborsSlider.setMinorTickSpacing(1);
+		minimumNeighborsSlider.setMajorTickSpacing(1);
 		minimumNeighborsSlider.setPaintLabels(true);
 		minimumNeighborsSlider.setPaintTicks(true);
 		minimumNeighborsSlider.addChangeListener(this);
 
 		maximumNeighborsSlider = new JSlider(Constants.MINIMUM_CELL_NEIGHBORS, Constants.MAXIMUM_CELL_NEIGHBORS);
-		maximumNeighborsSlider.setMajorTickSpacing(5);
-		maximumNeighborsSlider.setMinorTickSpacing(1);
+		maximumNeighborsSlider.setMajorTickSpacing(1);
 		maximumNeighborsSlider.setPaintLabels(true);
 		maximumNeighborsSlider.setPaintTicks(true);
 		maximumNeighborsSlider.addChangeListener(this);

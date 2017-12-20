@@ -58,7 +58,7 @@ public class GridView extends JPanel implements Observer{
 		
 		int gridSize = gridModel.getCurrentGridSize();
 		boolean grid [][] = gridModel.getGrid();
-		int cellSize = getCorrectSize()/gridModel.getCurrentGridSize() - 2;
+		int cellSize = getCorrectSize()/gridModel.getCurrentGridSize();
 		int widthPadding = (this.getWidth() - gridSize * cellSize) / 2;
 		int heightPadding = (this.getHeight() - gridSize * cellSize) / 2;
 				

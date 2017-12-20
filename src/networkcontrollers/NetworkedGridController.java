@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import model.GridModel;
 import utils.Constants;
-import utils.Timer;
 
 public abstract class NetworkedGridController {
 
@@ -15,11 +14,9 @@ public abstract class NetworkedGridController {
 	protected GridModel gridModel;
 	// Command received from clients that still need to be processed.
 	protected ArrayList<String> pendingCommands = new ArrayList<String>();
-	// The timer used to calculate when the game need to be updated.
-	protected Timer timer;
+	
 
-	public NetworkedGridController(GridModel gridModel, Timer timer) {
-		this.timer = timer;
+	public NetworkedGridController(GridModel gridModel) {
 		this.gridModel = gridModel;
 	}
 
@@ -86,7 +83,6 @@ public abstract class NetworkedGridController {
 
 	protected void processGridReset() {
 		gridModel.resetGrid();
-		timer.resetTimer();
 	}
 
 	protected void processGridSizeChange(int newSize) {

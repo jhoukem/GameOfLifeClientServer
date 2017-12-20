@@ -17,49 +17,52 @@ public class GameOfLifeServer extends JFrame{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
-	// The game state.
-	private GridModel gridModel = new GridModel();
-	private Thread serverListener;
-	private ServerGridController serverController;
 
+	// The grid that hold the game simulation.
+	private GridModel gridModel;
 	// The class that allow to visualize the simulation.
 	private GridView gridView;
-
+	// This thread run a server listener.
+	private Thread serverListener;
+	// This class handle all the updates from the network.
+	private ServerGridController serverController;
+	// Used to know when to perform an update without blocking the current thread.
 	private Timer timer = new Timer();
-	// Whether the game state has changed and need to be sent to the players.
-	private boolean needUpdate = true;
-	
-	// Whether the server should open a window.
-	private boolean isRunningGui = true;
+
 	
 	public GameOfLifeServer() {
+		this(true);
+	}
 
+	public GameOfLifeServer(boolean visible) {
+
+		gridModel = new GridModel();
 		serverController = new ServerGridController(gridModel, timer);
-		initGraphics();
-		
+		initGraphics(visible);
+
 		serverListener = new Thread(new ServerListener(serverController));
 		serverListener.start();
-		start();
 	}
 
 
-	private void initGraphics() {
+	private void initGraphics(boolean visible) {
 		gridView = new GridView(gridModel);
 		this.setLayout(new BorderLayout());
 		this.add(gridView, BorderLayout.CENTER);
 		this.setSize(Constants.WIDTH, Constants.HEIGHT);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setVisible(isRunningGui);
+		this.setVisible(visible);
 	}
 
 
 	public void start(){
 
+		// Whether the game state has changed and need to be sent to the players.
+		boolean needUpdate = true;
+		
 		while(true){
 			timer.updateTimer();
-			
 			if(timer.isTimerOver(gridModel.getUpdateRate())){
 				timer.resetTimer();
 				gridModel.update();
@@ -67,13 +70,23 @@ public class GameOfLifeServer extends JFrame{
 			}
 
 			// Process the commands sent by the clients. The result tell us whether we should send an update to the players.
-			needUpdate = needUpdate ? needUpdate : serverController.processPendingCommands();
-			
+			boolean needUpdate2 = serverController.processPendingCommands();
+
+			needUpdate = needUpdate || needUpdate2;
+
 			if(needUpdate){
 				needUpdate = false;
-				serverController.sendWorldSnapShot();
+				serverController.sendWorldSnapShotToClients();
 			}
 		}
+	}
+
+	public GridModel getGrid(){
+		return gridModel;
+	}
+	
+	public ServerGridController getServerGridController(){
+		return serverController;
 	}
 
 }

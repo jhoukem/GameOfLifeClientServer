@@ -11,7 +11,7 @@ public class ClientListener implements Runnable {
 
 	// Allow to easily switch debug log on/off.
 	private final static boolean DEBUG = false;
-	
+
 	// The client socket used to communicate with the server.
 	private SocketChannel clientSocket;
 	// This class will handle every message received from the server.
@@ -27,7 +27,12 @@ public class ClientListener implements Runnable {
 		while(true){
 			try {
 				ByteBuffer buffer = ByteBuffer.allocate(Constants.BUFFER_SIZE);
-				clientSocket.read(buffer);
+				int byteRead = clientSocket.read(buffer);
+
+				if(Constants.DEBUG_BITSET){
+					System.out.println("[CLIENT] read "+byteRead+" bytes");
+				}
+
 				String rawMessage = new String(buffer.array());
 				clientController.addPendingCommand(rawMessage);
 				if(DEBUG){

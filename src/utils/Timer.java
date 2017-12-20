@@ -25,4 +25,8 @@ public class Timer {
 		lastFrame = System.currentTimeMillis();
 		return (float)delta;
 	}
+
+	public float getStateTime() {
+		return stateTime;
+	}
 }
