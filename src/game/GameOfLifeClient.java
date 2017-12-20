@@ -129,8 +129,9 @@ public class GameOfLifeClient extends JFrame{
 			clientSocket = SocketChannel.open(new InetSocketAddress("127.0.0.1" , ServerListener.SERVER_PORT));
 			commandPanel.setSocket(clientSocket);
 			System.out.println("Connected to the server: "+clientSocket.socket().getRemoteSocketAddress());
+			JOptionPane.showMessageDialog(null, "Connection successful");
 		} catch (IOException e) {
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Connection failed");
 		}
 	}
 

@@ -30,8 +30,8 @@ public class ServerGridController extends NetworkedGridController{
 	protected void processGridReset() {
 		super.processGridReset();
 		// Server side a reset trigger a randomized world.
-//		gridModel.populateRandomly();
-		gridModel.tata();
+		gridModel.populateRandomly();
+//		gridModel.tata();
 	}
 
 	public void sendWorldSnapShot() {
