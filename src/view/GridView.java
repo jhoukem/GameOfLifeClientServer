@@ -2,6 +2,8 @@ package view;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.JPanel;
 
@@ -12,7 +14,7 @@ import model.GridModel;
  * @author Jean-Hugo
  *
  */
-public class GridView extends JPanel{
+public class GridView extends JPanel implements Observer{
 
 	/**
 	 * 
@@ -28,6 +30,8 @@ public class GridView extends JPanel{
 
 	public GridView(GridModel gridModel) {
 		this.gridModel = gridModel;
+		// The view will always be notified when the model updates.
+		this.gridModel.addObserver(this);
 	}
 
 
@@ -87,6 +91,13 @@ public class GridView extends JPanel{
 			System.out.println();
 		}
 		System.out.println();
+	}
+
+
+	@Override
+	public void update(Observable o, Object arg) {
+//		displayGridAscii();
+		repaint();
 	}
 
 }

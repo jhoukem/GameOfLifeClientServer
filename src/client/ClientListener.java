@@ -1,41 +1,44 @@
 package client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+
+import networkcontrollers.ClientGridController;
+import utils.Constants;
 
 public class ClientListener implements Runnable {
 
+	// Allow to easily switch debug log on/off.
+	private final static boolean DEBUG = false;
+	
 	// The client socket used to communicate with the server.
-	private Socket socket;
+	private SocketChannel clientSocket;
 	// This class will handle every message received from the server.
-	private ClientController clientController;
-	// Allow us to read lines from the socket.
-	private BufferedReader in;
+	private ClientGridController clientController;
 
-	private boolean running = true;
-
-	public ClientListener(Socket socket, ClientController clientController) {
-		this.socket = socket;
+	public ClientListener(SocketChannel socket, ClientGridController clientController) {
+		this.clientSocket = socket;
 		this.clientController = clientController;
 
-		try {
-			this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
 	public void run() {
-		while(running){
+		while(true){
 			try {
-				String message = in.readLine();
-				System.out.println("Client received message: "+message);
-				clientController.processMessage(message);
+				ByteBuffer buffer = ByteBuffer.allocate(Constants.BUFFER_SIZE);
+				clientSocket.read(buffer);
+				String rawMessage = new String(buffer.array());
+				clientController.addPendingCommand(rawMessage);
+				if(DEBUG){
+					System.out.println("[CLIENT] received: "+ rawMessage);
+					System.out.println("[CLIENT] received: "+ rawMessage.trim());
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
+				// Connection failed the thread stops.
+				break;
 			}
 		}
 	}

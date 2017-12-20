@@ -1,8 +1,8 @@
 package main;
 
-import server.GameOfLifeServer;
+import game.GameOfLifeServer;
 
-public class LaunchGOLServer {
+public class LaunchServer {
 
 	public static void main(String[] args) {
 		new GameOfLifeServer();

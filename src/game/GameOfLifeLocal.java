@@ -1,4 +1,4 @@
-package main;
+package game;
 
 
 
@@ -35,6 +35,8 @@ public class GameOfLifeLocal extends JFrame{
 	public GameOfLifeLocal(int size) {
 		
 		this.gridModel = new GridModel(size);
+		this.gridModel.populateRandomly();
+//		this.gridModel.tata();
 		this.gridView = new GridView(gridModel);
 		initGraphics();
 		start();
@@ -50,6 +52,7 @@ public class GameOfLifeLocal extends JFrame{
 	}
 
 	public void start(){
+		System.out.println("First");
 		while(true){
 			gridView.displayGridAscii();
 			gridView.repaint();
