@@ -5,7 +5,7 @@ import game.GameOfLifeLocal;
 public class LaunchLocal {
 	
 	public static void main(String[] args) {
-		new GameOfLifeLocal(100);
+		new GameOfLifeLocal(50);
 	}
 	
 }

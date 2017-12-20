@@ -7,11 +7,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import networkcontrollers.ServerGridController;
 import utils.Constants;
+import utils.UtilsFunctions;
 
 public class ServerListener implements Runnable{
 
@@ -86,10 +88,11 @@ public class ServerListener implements Runnable{
 			if (selectionKey.isAcceptable()) {
 				try {
 					ServerSocketChannel ssChannel = (ServerSocketChannel) selectionKey.channel();
-					SocketChannel sChannel = (SocketChannel) ssChannel.accept();
-					sChannel.configureBlocking(false);
-					sChannel.register(selectionKey.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-					System.out.println("[Server]: New client connected with ip address: "+sChannel.getRemoteAddress());
+					SocketChannel clientChannel = (SocketChannel) ssChannel.accept();
+					clientChannel.configureBlocking(false);
+					clientChannel.register(selectionKey.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+					System.out.println("[Server]: New client connected with ip address: "+clientChannel.getRemoteAddress());
+					sendClientGridInit(clientChannel);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -115,6 +118,29 @@ public class ServerListener implements Runnable{
 			}
 
 			iterator.remove();
+		}
+	}
+
+	/**
+	 * The the current snapshot and the current grid parameters all at once to the new client connected.
+	 * 
+	 * @param clientChannel
+	 */
+	private void sendClientGridInit(SocketChannel clientChannel) {
+		
+		try {
+			
+			byte[] toSend = serverController.getInitializationMessage();
+			
+			if(DEBUG){
+				BitSet bs = BitSet.valueOf(toSend);
+				UtilsFunctions.displayBitField(bs, "On send");
+			}
+
+			// Send the current world snapshot.
+			clientChannel.write(ByteBuffer.wrap(toSend));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

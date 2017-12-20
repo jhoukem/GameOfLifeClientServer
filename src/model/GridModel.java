@@ -13,6 +13,7 @@ import utils.Constants;
  */
 public class GridModel extends Observable{
 
+	
 	// The maximum size that a grid can take.
 	transient public static final int MAXIMUM_GRID_SIZE = 100;
 	// The size of the grid by default.
@@ -24,13 +25,13 @@ public class GridModel extends Observable{
 	private boolean gridReference[][] = new boolean[MAXIMUM_GRID_SIZE][MAXIMUM_GRID_SIZE];
 
 	// The current size of the grid.
-	private int currentSize = DEFAULT_GRID_SIZE;
+	private int currentGridSize = DEFAULT_GRID_SIZE;
 
 	// The cycle counter that represent the current iteration number.
 	private int cycle = 0;
 
 	// The time in millisecond between each call to update.
-	private int updateRate = 1000;
+	private int updateRate = 3000;
 
 	// Default interval for a living cell to stay alive.
 	private int minInterval = 2;
@@ -66,7 +67,7 @@ public class GridModel extends Observable{
 	}
 
 	public void tata() {
-		createBar(currentSize/2, currentSize/2);
+		createBar(currentGridSize/2, currentGridSize/2);
 
 		setCell(0, 0, true);
 		setCell(0, 1, true);
@@ -80,6 +81,25 @@ public class GridModel extends Observable{
 		setCell(2, 3, true);
 		setCell(1, 0, true);
 
+		setCell(1, 1, true);
+		setCell(1, 2, true);
+		setCell(2, 1, true);
+		setCell(2, 2, true);
+		setCell(5, 3, true);
+		setCell(6, 0, true);
+		setCell(8, 1, true);
+		setCell(5, 2, true);
+		setCell(5, 1, true);
+		setCell(4, 2, true);
+		setCell(2, 3, true);
+		setCell(5, 9, true);
+		setCell(1, 5, true);
+		setCell(3, 2, true);
+		setCell(8, 8, true);
+		setCell(3, 3, true);
+		setCell(7, 3, true);
+		setCell(5, 6, true);
+		
 		notifyObservers();
 	}
 
@@ -103,8 +123,8 @@ public class GridModel extends Observable{
 	}
 
 	public void populateRandomly(){
-		for (int i = 0; i < currentSize; i++) {
-			for (int j = 0; j < currentSize; j++) {
+		for (int i = 0; i < currentGridSize; i++) {
+			for (int j = 0; j < currentGridSize; j++) {
 				if(Math.random()*100 < 20){
 					setCell(i, j, true);
 				} else {
@@ -121,8 +141,8 @@ public class GridModel extends Observable{
 	 */
 	public void update() {
 		incrementCycle();
-		for(int i = 0; i < currentSize; i++){
-			for (int j = 0; j < currentSize; j++) {
+		for(int i = 0; i < currentGridSize; i++){
+			for (int j = 0; j < currentGridSize; j++) {
 				int neighborsCount = getCellNeighbours(i, j);
 
 				// Check in the grid reference so the update do not affect the current grid state.
@@ -182,8 +202,8 @@ public class GridModel extends Observable{
 	private int getCorrectPosition(int value) {
 
 		if(value < 0) {
-			return currentSize - 1;
-		} else if(value >= currentSize){
+			return currentGridSize - 1;
+		} else if(value >= currentGridSize){
 			return 0;
 		} else {
 			return value;
@@ -194,8 +214,8 @@ public class GridModel extends Observable{
 	 * Set the reference grid to the current grid state.
 	 */
 	private void updateGridReference() {
-		for(int i = 0; i < currentSize; i++){
-			for (int j = 0; j < currentSize; j++) {
+		for(int i = 0; i < currentGridSize; i++){
+			for (int j = 0; j < currentGridSize; j++) {
 				gridReference[i][j] = grid[i][j];
 			}
 		}
@@ -226,17 +246,17 @@ public class GridModel extends Observable{
 		return grid;
 	}
 
-	public int getActualSize() {
-		return currentSize;
+	public int getCurrentGridSize() {
+		return currentGridSize;
 	}
 
 	public void setCurrentSize(int actualSize) {
 		if(actualSize >= DEFAULT_GRID_SIZE && actualSize <= MAXIMUM_GRID_SIZE){
-			this.currentSize = actualSize;
+			this.currentGridSize = actualSize;
 
 			// Kill all the cell beyond the grid border.
-			for(int i = currentSize; i < grid.length; i++){
-				for (int j = currentSize; j < grid.length; j++) {
+			for(int i = currentGridSize; i < grid.length; i++){
+				for (int j = currentGridSize; j < grid.length; j++) {
 					setCell(i, j, false);
 				}
 			}
@@ -262,9 +282,9 @@ public class GridModel extends Observable{
 	 */
 	public BitSet getWorldSnapShot() {
 		BitSet bs = new BitSet();
-		for (int i = 0; i < currentSize; i++) {
-			for (int j = 0; j < currentSize; j++) {
-				int idx = currentSize*i + j;
+		for (int i = 0; i < currentGridSize; i++) {
+			for (int j = 0; j < currentGridSize; j++) {
+				int idx = currentGridSize*i + j;
 				if(grid[i][j]){
 					bs.set(idx);
 				} else {
@@ -283,15 +303,15 @@ public class GridModel extends Observable{
 
 
 		for (int i = 0; i < bs.size(); i++) {
-			int row = i / currentSize;
-			int col = i % currentSize;
+			int row = i / currentGridSize;
+			int col = i % currentGridSize;
 			grid[row][col] = bs.get(i);
 		}
 
 		// If we haven't received any bit for the rest of the array, it mean it is empty.
-		if(bs.size() < currentSize*currentSize){
-			for (int i = bs.size()/currentSize; i < currentSize; i++) {
-				for (int j = bs.size()%currentSize; j < currentSize; j++) {
+		if(bs.size() < currentGridSize*currentGridSize){
+			for (int i = bs.size()/currentGridSize; i < currentGridSize; i++) {
+				for (int j = bs.size()%currentGridSize; j < currentGridSize; j++) {
 					grid[i][j] = false;
 				}
 			}
@@ -309,9 +329,17 @@ public class GridModel extends Observable{
 		}
 	}
 
-	private boolean cellRequirementCorrect(int min, int max) {
-		return (min > 0 && max > 0 && min <= Constants.MAXIMUM_CELL_NEIGHBORS && max <= Constants.MAXIMUM_CELL_NEIGHBORS
+	public static boolean cellRequirementCorrect(int min, int max) {
+		return (min >= 0 && max >= 0 && min <= Constants.MAXIMUM_CELL_NEIGHBORS && max <= Constants.MAXIMUM_CELL_NEIGHBORS
 				&& min <= max);
+	}
+
+	public int getMinimumCellRequirement() {
+		return minInterval;
+	}
+	
+	public int getMaximumCellRequirement() {
+		return maxInterval;
 	}
 
 }

@@ -20,7 +20,6 @@ public class ClientListener implements Runnable {
 	public ClientListener(SocketChannel socket, ClientGridController clientController) {
 		this.clientSocket = socket;
 		this.clientController = clientController;
-
 	}
 
 	@Override
@@ -36,7 +35,6 @@ public class ClientListener implements Runnable {
 					System.out.println("[CLIENT] received: "+ rawMessage.trim());
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
 				// Connection failed the thread stops.
 				break;
 			}

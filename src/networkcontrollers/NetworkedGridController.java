@@ -56,34 +56,31 @@ public abstract class NetworkedGridController {
 		switch (command[TYPE]) {
 		case Constants.CHANGE_GRID_SIZE_COMMAND:
 			if(command.length > 1){
-				processGridSizeChange(command[DATA]);
+				processGridSizeChange(Integer.parseInt(command[DATA]));
 			}
 			break;
 		case Constants.CHANGE_GRID_UPDATE_RATE_COMMAND:
 			if(command.length > 1){
-				processGridUpdateRate(command[DATA]);
+				processGridUpdateRate(Integer.parseInt(command[DATA]));
 			}
 			break;
 		case Constants.RESET_GRID_COMMAND:
 			processGridReset();
 			break;
 		case Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND:
-			processGridCellRequirement(command);
+			processGridCellRequirement(Integer.parseInt(command[DATA]), 
+					Integer.parseInt(command[DATA+1]));
 			break;
 		default:
 			break;
 		}
 	}
 
-	private void processGridCellRequirement(String[] command) {
-		int min = Integer.parseInt(command[1]);
-		int max = Integer.parseInt(command[2]);
+	protected void processGridCellRequirement(int min, int max) {
 		gridModel.setCellRequirement(min, max);
-
 	}
 
-	private void processGridUpdateRate(String command) {
-		int newUpdateRate = Integer.parseInt(command);
+	protected void processGridUpdateRate(int newUpdateRate) {
 		gridModel.setUpdateRate(newUpdateRate);
 	}
 
@@ -92,8 +89,7 @@ public abstract class NetworkedGridController {
 		timer.resetTimer();
 	}
 
-	protected void processGridSizeChange(String command) {
-		int newSize = Integer.parseInt(command);
+	protected void processGridSizeChange(int newSize) {
 		gridModel.setCurrentSize(newSize);
 	}
 

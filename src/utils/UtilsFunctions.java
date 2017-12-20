@@ -11,7 +11,7 @@ public class UtilsFunctions {
 	 */
 	public static void sleep(int i) {
 		try {
-			Thread.sleep(i*100);
+			Thread.sleep(i*1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}		
@@ -23,6 +23,25 @@ public class UtilsFunctions {
 			System.out.print(bs.get(i) ? 1 : 0);
 		}
 		System.out.println();
+	}
+	
+	public static byte[] concatArray(byte[] ... arrays){
+		
+		byte[] concat;
+		int size = 0;
+		
+		for(byte[] array : arrays){
+			size += array.length;
+		}
+		concat = new byte[size];
+		
+		int pos = 0;
+		for(byte[] array : arrays){
+			System.arraycopy(array, 0, concat, pos, array.length);
+			pos += array.length;
+		}
+				
+		return concat;
 	}
 	
 }

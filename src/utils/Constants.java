@@ -18,6 +18,7 @@ public class Constants {
 	public static final String RESET_GRID_COMMAND = "2";
 	public static final String CHANGE_GRID_CELL_REQUIREMENT_COMMAND = "3";
 	public static final String GRID_SNAPSHOT = "4";
+	public static final String GRID_INITIALIZATION = "5";
 
 	public static final int BUFFER_SIZE = 2048;
 	public static final int MAXIMUM_CELL_NEIGHBORS = 8;

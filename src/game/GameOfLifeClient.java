@@ -64,11 +64,11 @@ public class GameOfLifeClient extends JFrame{
 	public GameOfLifeClient() {
 
 		gridModel = new GridModel();
-		clientController = new ClientGridController(gridModel, timer);
 		initGraphics();
+		clientController = new ClientGridController(gridModel, timer, commandPanel);
 
-//		askConnection();
-				initNetwork("");
+		askConnection();
+		//				initNetwork("");
 		start();
 	}
 
@@ -145,15 +145,8 @@ public class GameOfLifeClient extends JFrame{
 		while(true){
 
 			if(isConnected()){
-
-//				timer.updateTimer();
-//				if(timer.isTimerOver(gridModel.getUpdateRate())){
-//					gridView.repaint();
-//					timer.resetTimer();
-//					gridModel.update();
-//				}
+				clientController.processPendingCommands();
 			}
-			clientController.processPendingCommands();
 		}
 	}
 

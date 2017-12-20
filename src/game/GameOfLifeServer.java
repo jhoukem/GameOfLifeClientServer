@@ -36,7 +36,6 @@ public class GameOfLifeServer extends JFrame{
 	public GameOfLifeServer() {
 
 		serverController = new ServerGridController(gridModel, timer);
-		
 		initGraphics();
 		
 		serverListener = new Thread(new ServerListener(serverController));

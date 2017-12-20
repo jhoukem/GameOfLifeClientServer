@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import javax.swing.JFrame;
 
 import model.GridModel;
+import utils.Constants;
 import utils.UtilsFunctions;
 import view.GridView;
 
@@ -22,11 +23,6 @@ public class GameOfLifeLocal extends JFrame{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	// The game windows width.
-	private static final int WIDTH = 700;
-	// The game windows height.
-	private static final int HEIGHT = 700;
-	
 	// The grid that hold the game simulation.
 	private GridModel gridModel;
 	// The class that allow to visualize the simulation.
@@ -36,7 +32,6 @@ public class GameOfLifeLocal extends JFrame{
 		
 		this.gridModel = new GridModel(size);
 		this.gridModel.populateRandomly();
-//		this.gridModel.tata();
 		this.gridView = new GridView(gridModel);
 		initGraphics();
 		start();
@@ -45,16 +40,15 @@ public class GameOfLifeLocal extends JFrame{
 	private void initGraphics() {
 		this.setLayout(new BorderLayout());
 		this.add(gridView, BorderLayout.CENTER);
-		this.setSize(WIDTH, HEIGHT);
+		this.setSize(Constants.WIDTH, Constants.HEIGHT);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setVisible(true);
 	}
 
 	public void start(){
-		System.out.println("First");
 		while(true){
-			gridView.displayGridAscii();
+//			gridView.displayGridAscii();
 			gridView.repaint();
 			UtilsFunctions.sleep(1);
 			gridModel.update();

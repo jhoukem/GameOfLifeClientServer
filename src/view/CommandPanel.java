@@ -37,9 +37,15 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	// Used to reset the game.
 	private JButton reset;
 
-
+	// Both slicer below are used to control the neighbors count interval for the cell to survive.
 	private JSlider minimumNeighborsSlider;
 	private JSlider maximumNeighborsSlider;
+
+	// Usefull to know if the update is comming from the client or from the server.
+	private boolean onServerUpdate = false;
+
+	// Whether a slicer is updating another one.
+	private boolean concurrentModification = false;
 
 	public CommandPanel() {
 		initGui();
@@ -124,34 +130,47 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	@Override
 	public void stateChanged(ChangeEvent ce) {
 
+		if(onServerUpdate){
+			return;
+		}
+
 		if(ce.getSource().equals(gridSizeSlider) && !gridSizeSlider.getValueIsAdjusting()){
 			String cmd = Constants.CHANGE_GRID_SIZE_COMMAND + ":" + gridSizeSlider.getValue();
 			send(cmd);
 		} else if(ce.getSource().equals(gridUpdateRateSlider) && !gridUpdateRateSlider.getValueIsAdjusting()){
 			String cmd = Constants.CHANGE_GRID_UPDATE_RATE_COMMAND + ":" + gridUpdateRateSlider.getValue();
 			send(cmd);
-		} else if(ce.getSource().equals(minimumNeighborsSlider) && !minimumNeighborsSlider.getValueIsAdjusting()){
+		} else if(!concurrentModification && ce.getSource().equals(minimumNeighborsSlider) && !minimumNeighborsSlider.getValueIsAdjusting()){
 
 			// The minimum cannot be > to the max.
 			if(minimumNeighborsSlider.getValue() > maximumNeighborsSlider.getValue()){
+				concurrentModification = true;
 				maximumNeighborsSlider.setValue(minimumNeighborsSlider.getValue());
 			}
 
 			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+minimumNeighborsSlider.getValue()+":"+maximumNeighborsSlider.getValue();
 			send(cmd);
-		} else if(ce.getSource().equals(maximumNeighborsSlider) && !maximumNeighborsSlider.getValueIsAdjusting()){
+
+			concurrentModification = false;
+		} else if(!concurrentModification && ce.getSource().equals(maximumNeighborsSlider) && !maximumNeighborsSlider.getValueIsAdjusting()){
 
 			// The minimum cannot be > to the max.
 			if(maximumNeighborsSlider.getValue() < minimumNeighborsSlider.getValue()){
+				concurrentModification = true;
 				minimumNeighborsSlider.setValue(maximumNeighborsSlider.getValue());
 			}
 			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+minimumNeighborsSlider.getValue()+":"+maximumNeighborsSlider.getValue();
 			send(cmd);
+
+			concurrentModification = false;
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent ap) {
+		if(onServerUpdate){
+			return;
+		}
 
 		if(ap.getSource().equals(reset)){
 			String cmd = Constants.RESET_GRID_COMMAND;
@@ -161,7 +180,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	}
 
 	private void send(String cmd) {
-		
+
 		// Not connected yet.
 		if(clientSocket == null){
 			return;
@@ -177,5 +196,42 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 
 	public void setSocket(SocketChannel socket){
 		this.clientSocket = socket;
+	}
+
+	public void setCurrentGridSize(int currentGridSize) {
+		onServerUpdate = true;
+		// If the client is not currently using this slicer.
+		if(!gridSizeSlider.getValueIsAdjusting()){
+			gridSizeSlider.setValue(currentGridSize);
+		}
+		onServerUpdate = false;
+	}
+
+	public void setCurrentUpdateRate(int currentUpdateRate) {
+		onServerUpdate = true;
+		// If the client is not currently using this slicer.
+		if(!gridUpdateRateSlider.getValueIsAdjusting()){
+			this.gridUpdateRateSlider.setValue(currentUpdateRate);		
+		}
+		onServerUpdate = false;
+	}
+
+	public void setCellRequirement(int min, int max) {
+		onServerUpdate = true;
+
+		if(GridModel.cellRequirementCorrect(min, max)){
+			
+			// If the client is not currently using this slicer.
+			if(!minimumNeighborsSlider.getValueIsAdjusting()){
+				this.minimumNeighborsSlider.setValue(min);
+			}
+			// If the client is not currently using this slicer.
+			if(!maximumNeighborsSlider.getValueIsAdjusting()){
+				this.maximumNeighborsSlider.setValue(max);
+			}
+		} else {
+			System.err.println("Wrong data received cell requirement is not correct. Min = "+min+" Max = "+max );
+		}
+		onServerUpdate = false;
 	}
 }

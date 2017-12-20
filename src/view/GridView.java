@@ -21,8 +21,13 @@ public class GridView extends JPanel implements Observer{
 	 */
 	private static final long serialVersionUID = 1L;
 
+	// Chacters ascii used to represent the cells state.
 	private static final char DEAD_CELL_CHAR = '.';
 	private static final char ALIVE_CELL_CHAR = '*';
+
+	// Color used to represent the cells state.
+	private static final Color ALIVE_CELL_COLOR = Color.GRAY;
+	private static final Color DEAD_CELL_COLOR = Color.BLACK;
 
 	// The grid to watch.
 	private GridModel gridModel;
@@ -44,20 +49,25 @@ public class GridView extends JPanel implements Observer{
 	}
 
 
+	/**
+	 * Display the actual state of the gridModel.
+	 * 
+	 * @param g
+	 */
 	private void paintGrid(Graphics g) {
 		
-		int gridSize = gridModel.getActualSize();
+		int gridSize = gridModel.getCurrentGridSize();
 		boolean grid [][] = gridModel.getGrid();
-		int cellSize = getCorrectSize()/gridModel.getActualSize() - 2;
+		int cellSize = getCorrectSize()/gridModel.getCurrentGridSize() - 2;
 		int widthPadding = (this.getWidth() - gridSize * cellSize) / 2;
 		int heightPadding = (this.getHeight() - gridSize * cellSize) / 2;
 				
 		for (int i = 0; i < gridSize; i++) {
 			for (int j = 0; j < gridSize; j++) {
 				if(grid[i][j]){
-					g.setColor(Color.GRAY);
+					g.setColor(ALIVE_CELL_COLOR);
 				} else {
-					g.setColor(Color.BLACK);
+					g.setColor(DEAD_CELL_COLOR);
 				}
 				g.fill3DRect(j * cellSize + widthPadding, i * cellSize + heightPadding, cellSize, cellSize, grid[i][j]);
 			}
@@ -76,7 +86,7 @@ public class GridView extends JPanel implements Observer{
 
 	public void displayGridAscii(){
 
-		int gridSize = gridModel.getActualSize();
+		int gridSize = gridModel.getCurrentGridSize();
 		boolean grid [][] = gridModel.getGrid();
 
 		System.out.println("Generation n "+gridModel.getCycle());
