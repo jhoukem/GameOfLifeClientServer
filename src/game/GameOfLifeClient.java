@@ -5,7 +5,6 @@ package game;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
@@ -22,8 +21,8 @@ import model.GridModel;
 import networkcontroller.ClientGridController;
 import server.ServerListener;
 import utils.Constants;
+import view.ClientGridView;
 import view.CommandPanel;
-import view.GridView;
 
 /**
  * This class act as the game manager, it holds all the objects to make the game run. Connect to a server and display
@@ -41,7 +40,7 @@ public class GameOfLifeClient extends JFrame{
 	// The grid that hold the game simulation.
 	private GridModel gridModel;
 	// The class that allow to visualize the simulation.
-	private GridView gridView;
+	private ClientGridView clientGridView;
 
 	// Values for the GUI.
 	private static final int PANEL_TOP_PADDING = 50;
@@ -80,7 +79,7 @@ public class GameOfLifeClient extends JFrame{
 
 		// If the window is open ask for a server ip.
 		if(visible){
-			askConnection();
+//			askConnection();
 		}
 	}
 
@@ -106,12 +105,12 @@ public class GameOfLifeClient extends JFrame{
 		cycleLabel = new JLabel();
 		cycleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		// Initialize the panels
-		this.gridView = new GridView(gridModel);
+		this.clientGridView = new ClientGridView(gridModel);
 		this.commandPanel = new CommandPanel();
 		this.viewPanel = new JPanel();
 		this.viewPanel.setLayout(new BorderLayout());
 		this.viewPanel.add(cycleLabel, BorderLayout.NORTH);
-		this.viewPanel.add(gridView, BorderLayout.CENTER);
+		this.viewPanel.add(clientGridView, BorderLayout.CENTER);
 		this.viewPanel.add(buttonPanel, BorderLayout.SOUTH);
 
 		commandPanel.setBorder(BorderFactory.createEmptyBorder(PANEL_TOP_PADDING, 5, PANEL_BOTTOM_PADDING, 5));
@@ -147,6 +146,7 @@ public class GameOfLifeClient extends JFrame{
 		initSocket(ip);
 		if(isConnected()){
 			initNetworkListener();
+			
 		}
 	}
 
@@ -163,8 +163,11 @@ public class GameOfLifeClient extends JFrame{
 			}
 			clientSocket = SocketChannel.open(new InetSocketAddress(ip , ServerListener.SERVER_PORT));
 			commandPanel.setSocket(clientSocket);
+			clientGridView.setClientSocket(clientSocket);
 			System.out.println("Connected to the server: "+clientSocket.socket().getRemoteSocketAddress());
-		} catch (IOException e) {
+		} 
+		// Catch all exceptions here since SocketChannel open throw an exception.
+		catch (Exception e) {
 			if(isVisible()) {
 				JOptionPane.showMessageDialog(null, "Connection failed");
 			} else {

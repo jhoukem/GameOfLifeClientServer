@@ -34,7 +34,12 @@ public class ServerGridController extends NetworkedGridController{
 		super(gridModel);
 		this.timer = timer;
 	}
-
+	
+	@Override
+	protected void processSettingCell(int cellPosition) {
+		gridModel.setCell(cellPosition);
+	}
+	
 	@Override
 	protected void processGridReset(int appationPercentage) {
 		super.processGridReset(appationPercentage);
@@ -101,7 +106,6 @@ public class ServerGridController extends NetworkedGridController{
 				}
 			} catch (IOException e) {
 				selectionKey.cancel();
-				e.printStackTrace();
 			}
 		}
 	}

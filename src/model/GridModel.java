@@ -10,7 +10,7 @@ import utils.Constants;
  * 
  * @author Jean-Hugo
  */
-public class GridModel extends Observable{
+public class GridModel extends Observable {
 
 	// The maximum size that a grid can take.
 	public static final int MAXIMUM_GRID_SIZE = 100;
@@ -318,6 +318,14 @@ public class GridModel extends Observable{
 
 	public int getApparitionPercentage() {
 		return apparitionPercentage;
+	}
+
+	public void setCell(int cellPosition) {
+		
+		int i = cellPosition/currentGridSize;
+		int j = cellPosition%currentGridSize;
+		setCell(i, j , true);
+		notifyObservers();
 	}
 
 }

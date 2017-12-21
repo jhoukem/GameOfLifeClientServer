@@ -10,11 +10,11 @@ import javax.swing.JPanel;
 import model.GridModel;
 
 /**
- *  This class can render a textual/graphical representation of the current grid state.
+ * This class can render a textual/graphical representation of the current grid state.
  *  
  * @author Jean-Hugo
  */
-public class GridView extends JPanel implements Observer{
+public class GridView extends JPanel implements Observer {
 
 	/**
 	 * 
@@ -30,8 +30,11 @@ public class GridView extends JPanel implements Observer{
 	private static final Color DEAD_CELL_COLOR = Color.BLACK;
 
 	// The grid to watch.
-	private GridModel gridModel;
-
+	protected GridModel gridModel;
+	// The size of a cell in pixel.
+	protected int cellSize;
+	protected int widthPadding;
+	protected int heightPadding;
 
 	public GridView(GridModel gridModel) {
 		this.gridModel = gridModel;
@@ -58,9 +61,9 @@ public class GridView extends JPanel implements Observer{
 
 		int gridSize = gridModel.getCurrentGridSize();
 		boolean grid [][] = gridModel.getGrid();
-		int cellSize = getCorrectSize()/gridModel.getCurrentGridSize();
-		int widthPadding = (this.getWidth() - gridSize * cellSize) / 2;
-		int heightPadding = (this.getHeight() - gridSize * cellSize) / 2;
+		cellSize = getCorrectSize()/gridModel.getCurrentGridSize();
+		widthPadding = (this.getWidth() - gridSize * cellSize) / 2;
+		heightPadding = (this.getHeight() - gridSize * cellSize) / 2;
 
 		for (int i = 0; i < gridSize; i++) {
 			for (int j = 0; j < gridSize; j++) {

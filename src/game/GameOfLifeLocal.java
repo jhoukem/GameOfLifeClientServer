@@ -55,7 +55,7 @@ public class GameOfLifeLocal extends JFrame{
 	 */
 	public void start(){
 		while(true){
-			gridView.displayGridAscii();
+//			gridView.displayGridAscii();
 			gridView.repaint();
 			UtilsFunctions.sleepSec(1);
 			gridModel.update();

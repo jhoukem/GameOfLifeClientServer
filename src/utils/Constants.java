@@ -25,6 +25,7 @@ public class Constants {
 	public static final String CHANGE_GRID_CELL_REQUIREMENT_COMMAND = "3";
 	public static final String GRID_SNAPSHOT = "4";
 	public static final String GRID_INITIALIZATION = "5";
+	public static final String GRID_SET_CELL = "6";
 	
 	// Size of the buffer used to read and to send to client.
 	public static final int BUFFER_SIZE = 2048;

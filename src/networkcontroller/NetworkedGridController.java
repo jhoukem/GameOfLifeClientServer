@@ -89,9 +89,15 @@ public abstract class NetworkedGridController {
 			processGridCellRequirement(Integer.parseInt(command[DATA]), 
 					Integer.parseInt(command[DATA+1]));
 			break;
+		case Constants.GRID_SET_CELL:
+			processSettingCell(Integer.parseInt(command[DATA]));
 		default:
 			break;
 		}
+	}
+
+	protected void processSettingCell(int cellPosition) {
+		// Do nothing by default.
 	}
 
 	protected void processGridCellRequirement(int min, int max) {
