@@ -5,16 +5,26 @@ import static org.junit.Assert.fail;
 import game.GameOfLifeClient;
 import game.GameOfLifeServer;
 
+/**
+ * This class allow me to test the communications between the client and the server.
+ * 
+ * @author Jean-Hugo
+ *
+ */
 public class WorldSnapshotUpdateTest {
 
 	// The number of time to reset the world.
 	private static final int ITERATION = 100;
 	// For every iteration the grid will be updated this amount of time.
 	private static final int NUMBER_OF_SIMULATION_PER_ITERATION = 500;
-
+	// Localhost address.
 	private static final String LOCALHOST = "127.0.0.1";
+	// The size of the grid used for the test.
 	private static final int GRID_SIZE_FOR_TEST = 10;
 
+	/**
+	 * Test whether the client always received the correct message from the server with my read/write on socket implementation.
+	 */
 	@org.junit.Test
 	public void testClientReceivedCorrectMessageFromServer() {
 

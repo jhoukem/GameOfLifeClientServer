@@ -3,6 +3,8 @@ package networkcontroller;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import javax.swing.JLabel;
+
 import model.GridModel;
 import utils.Constants;
 import view.CommandPanel;
@@ -15,26 +17,30 @@ import view.CommandPanel;
  */
 public class ClientGridController extends NetworkedGridController{
 
+	private static final String LABEL_CONSTANT = "Cycle ";
 	// The command panel used by the client to command the server.
 	private CommandPanel commandPanel;
 	// The the previous snapshot message received. Used for testing purposes.
 	private byte[] lastSnapshotMessageReceived;
+	// This is the label displayed on top of the grid view. It should be updated accordingly.
+	private JLabel cycleLabel;
 
-	public ClientGridController(GridModel gridModel, CommandPanel commandPanel) {
+	public ClientGridController(GridModel gridModel, CommandPanel commandPanel, JLabel cycleLabel) {
 		super(gridModel);
 		this.commandPanel = commandPanel;
+		this.cycleLabel = cycleLabel;
 	}
 
 	@Override
 	public boolean processPendingCommands() {
 		boolean needUpdate = false;
-		
+
 		synchronized (pendingCommands) {
 			for(byte[] message : pendingCommands){
-				
+
 				// When a command has been received, an update is necessary.
 				needUpdate = true;
-				
+
 				if(isGridSnapshot(message)){
 					processGridSnapshot(message);
 				} else if(isWorldInit(message)){
@@ -92,9 +98,31 @@ public class ClientGridController extends NetworkedGridController{
 		gridModel.setCellRequirement(min, max);
 		commandPanel.setCellRequirement(min, max);
 
+		// This size allow us to know how many byte are used to store the cell apparition percentage.
+		byte sizeToReadApparitionPercentage = message[offset++];
+		int apparitionPercentage = Integer.parseInt(new String(message, offset, sizeToReadApparitionPercentage));
+		// Increase the offset by the number of byte read.
+		offset += sizeToReadApparitionPercentage;
+		gridModel.setCellApparitionPercentage(apparitionPercentage);
+		commandPanel.setApparitionPercentage(apparitionPercentage);
+
+
+		// This size allow us to know how many byte are used to store the grid cycle number.
+		byte sizeToReadCurrentCycle = message[offset++];
+		int cycle = Integer.parseInt(new String(message, offset, sizeToReadCurrentCycle));
+		// Increase the offset by the number of byte read.
+		offset += sizeToReadCurrentCycle;
+
+		gridModel.setCurrentCycle(cycle);
+		updateLabelCycle();
+
 		// Initialize the grid tab.
 		byte[] snapshot = Arrays.copyOfRange(message, offset, message.length);
 		processGridSnapshot(snapshot);
+	}
+
+	private void updateLabelCycle() {
+		cycleLabel.setText(LABEL_CONSTANT + gridModel.getCycle());
 	}
 
 	@Override
@@ -116,8 +144,11 @@ public class ClientGridController extends NetworkedGridController{
 	}
 
 	@Override
-	protected void processGridReset() {
-		// Do nothing on client.
+	protected void processGridReset(int appationPercentage) {
+		gridModel.setCellApparitionPercentage(appationPercentage);
+		gridModel.setCurrentCycle(0);
+		updateLabelCycle();
+		commandPanel.setApparitionPercentage(appationPercentage);
 	}
 
 
@@ -136,6 +167,7 @@ public class ClientGridController extends NetworkedGridController{
 
 		gridModel.populateWithSnapshot(bitField);
 		gridModel.incrementCycle();
+		updateLabelCycle();
 
 		if(Constants.DEBUG_BITSET){
 			System.out.println("[CLIENT] bitSetCardinality = "+bitField.cardinality());

@@ -83,7 +83,7 @@ public abstract class NetworkedGridController {
 			}
 			break;
 		case Constants.RESET_GRID_COMMAND:
-			processGridReset();
+			processGridReset(Integer.parseInt(command[DATA]));
 			break;
 		case Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND:
 			processGridCellRequirement(Integer.parseInt(command[DATA]), 
@@ -102,7 +102,8 @@ public abstract class NetworkedGridController {
 		gridModel.setUpdateRate(newUpdateRate);
 	}
 
-	protected void processGridReset() {
+	protected void processGridReset(int appationPercentage) {
+		gridModel.setCellApparitionPercentage(appationPercentage);
 		gridModel.resetGrid();
 	}
 

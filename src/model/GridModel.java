@@ -12,7 +12,6 @@ import utils.Constants;
  */
 public class GridModel extends Observable{
 
-	private static final int APPARITION_PERCENTAGE = 20;
 	// The maximum size that a grid can take.
 	public static final int MAXIMUM_GRID_SIZE = 100;
 	// The size of the grid by default.
@@ -25,16 +24,16 @@ public class GridModel extends Observable{
 
 	// The current size of the grid.
 	private int currentGridSize = DEFAULT_GRID_SIZE;
-
 	// The cycle counter that represent the current iteration number.
 	private int cycle = 0;
-
 	// The time in millisecond between each call to update.
-	private int updateRate = 1000;
-
+	private int updateRate = Constants.DEFAULT_UPDATE_RATE;
 	// Default interval for a living cell to stay alive.
 	private int minInterval = 2;
 	private int maxInterval = 3;
+	// The chance in percent every cell from the grid has to be alive on grid reset.
+	private int apparitionPercentage = 20;
+
 
 	public GridModel() {
 		this(DEFAULT_GRID_SIZE);
@@ -55,13 +54,15 @@ public class GridModel extends Observable{
 	/**
 	 * Creates a basic periodic structure (for testing purpose).
 	 * 
-	 * @param x 
-	 * @param y
+	 * The structure is represented as following: +++
+	 *   
+	 * @param x The x coordinate for the center of the structure.
+	 * @param y The y coordinate for the center of the structure.
 	 */
 	public void createBar(int x, int y) {
-		setCell(getCorrectPosition(y - 1), x, true);
+		setCell(y, getCorrectPosition(x - 1), true);
 		setCell(y, x, true);
-		setCell(getCorrectPosition(y + 1), x, true);
+		setCell(y, getCorrectPosition(x + 1), true);
 	}
 
 	/**
@@ -91,7 +92,7 @@ public class GridModel extends Observable{
 	public void populateRandomly(){
 		for (int i = 0; i < currentGridSize; i++) {
 			for (int j = 0; j < currentGridSize; j++) {
-				if(Math.random()*100 < APPARITION_PERCENTAGE){
+				if(Math.random()*100 < apparitionPercentage){
 					setCell(i, j, true);
 				} else {
 					setCell(i, j, false);
@@ -124,7 +125,7 @@ public class GridModel extends Observable{
 		updateGridReference();
 		notifyObservers();
 	}
-	
+
 	public void incrementCycle() {
 		cycle++;		
 	}
@@ -263,7 +264,7 @@ public class GridModel extends Observable{
 				}
 			}
 		}
-		
+
 		return bitField;
 	}
 
@@ -305,6 +306,18 @@ public class GridModel extends Observable{
 
 	public int getMaximumCellRequirement() {
 		return maxInterval;
+	}
+
+	public void setCurrentCycle(int cycle) {
+		this.cycle = cycle;		
+	}
+
+	public void setCellApparitionPercentage(int appationPercentage) {
+		this.apparitionPercentage = appationPercentage;		
+	}
+
+	public int getApparitionPercentage() {
+		return apparitionPercentage;
 	}
 
 }

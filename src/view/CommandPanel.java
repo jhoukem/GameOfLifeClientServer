@@ -13,7 +13,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -31,20 +30,28 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	// This helps to keep the code readable.
+	private static final int GRID_SIZE_SLIDER_INDEX = 0;
+	private static final int GRID_UPDATE_RATE_SLIDER_INDEX = 0;
+	private static final int LOW_INTERVAL_SLIDER_INDEX = 0;
+	private static final int HIGHT_INTERVAL_SLIDER_INDEX = 1;
+	private static final int CELL_APPARITION_PERCENTAGE_SLIDER_INDEX = 0;
 
 	// The client socket which is connected to the server.
 	private SocketChannel clientSocket;
 
-	// Used to control the grid size.
-	private JSlider gridSizeSlider;
-	// Used to control the game update speed.
-	private JSlider gridUpdateRateSlider;
 	// Used to reset the game.
 	private JButton reset;
 
-	// Both slicer below are used to control the neighbors count interval for the cell to survive.
-	private JSlider minimumNeighborsSlider;
-	private JSlider maximumNeighborsSlider;
+	// Used to control the grid size.
+	private LabeledSlicerPanel gridSize;
+	// Used to control the game update speed.
+	private LabeledSlicerPanel gridUpdateRate;
+	// Used to control the neighbors count interval for the cell to survive.
+	private LabeledSlicerPanel cellNeighborsToSurvive;
+	// Used to control the apparition percentage for the cells on reset.
+	private LabeledSlicerPanel apparitionPercentageOnReset;
 
 	/** 
 	 * Useful to know if the update is coming from the client or from the server.
@@ -72,40 +79,33 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	 * Create all the graphic component needed.
 	 */
 	private void createComponents() {
-		gridSizeSlider = new JSlider(GridModel.DEFAULT_GRID_SIZE, GridModel.MAXIMUM_GRID_SIZE);
 
-		Hashtable<Integer, JLabel> table = new Hashtable<Integer, JLabel>();
-		table.put(10, new JLabel("10"));
-		table.put(50, new JLabel("50"));
-		table.put(100, new JLabel("100"));
+		Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
+		labelTable.put(10, new JLabel("10"));
+		labelTable.put(50, new JLabel("50"));
+		labelTable.put(100, new JLabel("100"));
 
-		gridSizeSlider.setLabelTable(table);
-		gridSizeSlider.setMajorTickSpacing(10);
-		gridSizeSlider.setPaintTicks(true);
-		gridSizeSlider.setPaintLabels(true);
-		gridSizeSlider.addChangeListener(this);
 
-		gridUpdateRateSlider = new JSlider(Constants.MINIMUM_UPDATE_RATE, Constants.MAXIMUM_UPDATE_RATE);
+		gridSize = new LabeledSlicerPanel("Grid size", this);
+		gridSize.addSlicer(GridModel.DEFAULT_GRID_SIZE, GridModel.MAXIMUM_GRID_SIZE, labelTable, 10, 0);
 
-		table = new Hashtable<Integer, JLabel>();
-		table.put(100, new JLabel("Min(100 ms)"));
-		table.put(5000, new JLabel("Max(5 sec)"));
 
-		gridUpdateRateSlider.setLabelTable(table);
-		gridUpdateRateSlider.setPaintLabels(true);
-		gridUpdateRateSlider.addChangeListener(this);
+		labelTable = new Hashtable<Integer, JLabel>();
+		labelTable.put(Constants.MINIMUM_UPDATE_RATE, new JLabel("Min(100 ms)"));
+		labelTable.put(Constants.MAXIMUM_UPDATE_RATE, new JLabel("Max(5 sec)"));
 
-		minimumNeighborsSlider = new JSlider(Constants.MINIMUM_CELL_NEIGHBORS, Constants.MAXIMUM_CELL_NEIGHBORS);
-		minimumNeighborsSlider.setMajorTickSpacing(1);
-		minimumNeighborsSlider.setPaintLabels(true);
-		minimumNeighborsSlider.setPaintTicks(true);
-		minimumNeighborsSlider.addChangeListener(this);
+		gridUpdateRate = new LabeledSlicerPanel("Grid update rate", this);
+		gridUpdateRate.addSlicer(Constants.MINIMUM_UPDATE_RATE, Constants.MAXIMUM_UPDATE_RATE, labelTable, 0, 0);
 
-		maximumNeighborsSlider = new JSlider(Constants.MINIMUM_CELL_NEIGHBORS, Constants.MAXIMUM_CELL_NEIGHBORS);
-		maximumNeighborsSlider.setMajorTickSpacing(1);
-		maximumNeighborsSlider.setPaintLabels(true);
-		maximumNeighborsSlider.setPaintTicks(true);
-		maximumNeighborsSlider.addChangeListener(this);
+
+		cellNeighborsToSurvive = new LabeledSlicerPanel("Cell requiered neighbors to survive", this);
+		cellNeighborsToSurvive.addSlicer("Low interval", Constants.MINIMUM_CELL_NEIGHBORS,
+				Constants.MAXIMUM_CELL_NEIGHBORS, null, 1, 0);
+		cellNeighborsToSurvive.addSlicer("Hight interval", Constants.MINIMUM_CELL_NEIGHBORS,
+				Constants.MAXIMUM_CELL_NEIGHBORS, null, 1, 0);
+
+		apparitionPercentageOnReset = new LabeledSlicerPanel("Chance for a cell to be alive on grid reset (in %)", null);
+		apparitionPercentageOnReset.addSlicer(0, 100, null, 20, 0);
 
 		reset = new JButton("Reset");
 		reset.addActionListener(this);
@@ -118,21 +118,17 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 
 		Panel controlPanel = new Panel();
 		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
-		controlPanel.add(gridSizeSlider);
-		controlPanel.add(gridUpdateRateSlider);
+
+		controlPanel.add(gridSize);
+		controlPanel.add(gridUpdateRate);
+		controlPanel.add(cellNeighborsToSurvive);
+		controlPanel.add(apparitionPercentageOnReset);
 
 
-		Panel panel = new Panel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-		panel.add(minimumNeighborsSlider);
-		panel.add(maximumNeighborsSlider);
-
-		controlPanel.add(panel);
 		this.setLayout(new BorderLayout());
-
 		this.add(controlPanel, BorderLayout.CENTER);
 
-		// To avoid my button being streched.
+		// To avoid my button being stretched.
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(reset);
 		this.add(buttonPanel, BorderLayout.SOUTH);
@@ -149,32 +145,37 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 			return;
 		}
 
-		if(ce.getSource().equals(gridSizeSlider) && !gridSizeSlider.getValueIsAdjusting()){
-			String cmd = Constants.CHANGE_GRID_SIZE_COMMAND + ":" + gridSizeSlider.getValue();
+		if(ce.getSource().equals(gridSize.getSlider(GRID_SIZE_SLIDER_INDEX)) && !(gridSize.isSliderAdjusting(GRID_SIZE_SLIDER_INDEX))){
+			String cmd = Constants.CHANGE_GRID_SIZE_COMMAND + ":" + gridSize.getSliderValue(GRID_SIZE_SLIDER_INDEX);
 			send(cmd);
-		} else if(ce.getSource().equals(gridUpdateRateSlider) && !gridUpdateRateSlider.getValueIsAdjusting()){
-			String cmd = Constants.CHANGE_GRID_UPDATE_RATE_COMMAND + ":" + gridUpdateRateSlider.getValue();
+		} else if(ce.getSource().equals(gridUpdateRate.getSlider(GRID_UPDATE_RATE_SLIDER_INDEX)) &&
+				!gridUpdateRate.isSliderAdjusting(GRID_UPDATE_RATE_SLIDER_INDEX)){
+			String cmd = Constants.CHANGE_GRID_UPDATE_RATE_COMMAND + ":" + gridUpdateRate.getSliderValue(GRID_UPDATE_RATE_SLIDER_INDEX);
 			send(cmd);
-		} else if(!concurrentModification && ce.getSource().equals(minimumNeighborsSlider) && !minimumNeighborsSlider.getValueIsAdjusting()){
+		} else if(!concurrentModification && ce.getSource().equals(cellNeighborsToSurvive.getSlider(LOW_INTERVAL_SLIDER_INDEX)) &&
+				!cellNeighborsToSurvive.isSliderAdjusting(LOW_INTERVAL_SLIDER_INDEX)){
 
-			// The minimum cannot be > to the max.
-			if(minimumNeighborsSlider.getValue() > maximumNeighborsSlider.getValue()){
+			// The minimum cannot be > to the maximum.
+			if(cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX) > cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX)){
 				concurrentModification = true;
-				maximumNeighborsSlider.setValue(minimumNeighborsSlider.getValue());
+				cellNeighborsToSurvive.setSliderValue(HIGHT_INTERVAL_SLIDER_INDEX, cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX));
 			}
 
-			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+minimumNeighborsSlider.getValue()+":"+maximumNeighborsSlider.getValue();
+			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)+
+					":"+cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX);
 			send(cmd);
 
 			concurrentModification = false;
-		} else if(!concurrentModification && ce.getSource().equals(maximumNeighborsSlider) && !maximumNeighborsSlider.getValueIsAdjusting()){
+		} else if(!concurrentModification && ce.getSource().equals(cellNeighborsToSurvive.getSlider(HIGHT_INTERVAL_SLIDER_INDEX)) &&
+				!cellNeighborsToSurvive.isSliderAdjusting(HIGHT_INTERVAL_SLIDER_INDEX)){
 
-			// The minimum cannot be > to the max.
-			if(maximumNeighborsSlider.getValue() < minimumNeighborsSlider.getValue()){
+			// The maximum cannot be < to the minimum.
+			if(cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX) < cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)){
 				concurrentModification = true;
-				minimumNeighborsSlider.setValue(maximumNeighborsSlider.getValue());
+				cellNeighborsToSurvive.setSliderValue(LOW_INTERVAL_SLIDER_INDEX, cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX));
 			}
-			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+minimumNeighborsSlider.getValue()+":"+maximumNeighborsSlider.getValue();
+			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)+
+					":"+cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX);
 			send(cmd);
 
 			concurrentModification = false;
@@ -191,7 +192,8 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 
 		if(ap.getSource().equals(reset)){
-			String cmd = Constants.RESET_GRID_COMMAND;
+			String cmd = Constants.RESET_GRID_COMMAND + ":" +
+					apparitionPercentageOnReset.getSliderValue(CELL_APPARITION_PERCENTAGE_SLIDER_INDEX);
 			send(cmd);
 		}
 
@@ -229,8 +231,8 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	public void setCurrentGridSize(int newGridSize) {
 		onServerUpdate = true;
 		// If the client is not currently using this slicer.
-		if(!gridSizeSlider.getValueIsAdjusting()){
-			gridSizeSlider.setValue(newGridSize);
+		if(!gridSize.isSliderAdjusting(GRID_SIZE_SLIDER_INDEX)){
+			gridSize.setSliderValue(GRID_SIZE_SLIDER_INDEX, newGridSize);
 		}
 		onServerUpdate = false;
 	}
@@ -243,8 +245,8 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	public void setCurrentUpdateRate(int newUpdateRate) {
 		onServerUpdate = true;
 		// If the client is not currently using this slicer.
-		if(!gridUpdateRateSlider.getValueIsAdjusting()){
-			this.gridUpdateRateSlider.setValue(newUpdateRate);		
+		if(!gridUpdateRate.isSliderAdjusting(GRID_UPDATE_RATE_SLIDER_INDEX)){
+			gridUpdateRate.setSliderValue(GRID_UPDATE_RATE_SLIDER_INDEX, newUpdateRate);
 		}
 		onServerUpdate = false;
 	}
@@ -259,18 +261,30 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		onServerUpdate = true;
 
 		if(GridModel.cellRequirementCorrect(min, max)){
-
 			// If the client is not currently using this slicer.
-			if(!minimumNeighborsSlider.getValueIsAdjusting()){
-				this.minimumNeighborsSlider.setValue(min);
+			if(!cellNeighborsToSurvive.isSliderAdjusting(LOW_INTERVAL_SLIDER_INDEX)){
+				cellNeighborsToSurvive.setSliderValue(LOW_INTERVAL_SLIDER_INDEX, min);
 			}
 			// If the client is not currently using this slicer.
-			if(!maximumNeighborsSlider.getValueIsAdjusting()){
-				this.maximumNeighborsSlider.setValue(max);
+			if(!cellNeighborsToSurvive.isSliderAdjusting(HIGHT_INTERVAL_SLIDER_INDEX)){
+				cellNeighborsToSurvive.setSliderValue(HIGHT_INTERVAL_SLIDER_INDEX, max);
 			}
 		} else {
 			System.err.println("Wrong data received cell requirement is not correct. Min = "+min+" Max = "+max );
 		}
 		onServerUpdate = false;
+	}
+
+	/**
+	 * When a command is received from the server to update the grid cell apparition percentage on reset,
+	 * it has to be reflected on the JSlider.
+	 * 
+	 * @param appationPercentage the new percentage of cell apparition on reset.
+	 */
+	public void setApparitionPercentage(int appationPercentage) {
+		// If the client is not currently using this slicer.
+		if(!apparitionPercentageOnReset.isSliderAdjusting(CELL_APPARITION_PERCENTAGE_SLIDER_INDEX)){
+			apparitionPercentageOnReset.setSliderValue(CELL_APPARITION_PERCENTAGE_SLIDER_INDEX, appationPercentage);
+		}
 	}
 }

@@ -12,8 +12,10 @@ import java.nio.channels.SocketChannel;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import client.ClientListener;
 import model.GridModel;
@@ -40,12 +42,19 @@ public class GameOfLifeClient extends JFrame{
 	private GridModel gridModel;
 	// The class that allow to visualize the simulation.
 	private GridView gridView;
+
+	// Values for the GUI.
+	private static final int PANEL_TOP_PADDING = 50;
+	private static final int PANEL_BOTTOM_PADDING = 50;
 	// This panel allow a client to send some commands to a server.
 	private CommandPanel commandPanel;
 	// This panel contains the connect button and the grid view panel.
 	private JPanel viewPanel;
 	// This button is used to connect to a server.
 	private JButton connect;
+	// This label display the current game cycle.
+	private JLabel cycleLabel;
+
 	// This thread run a client listener.
 	private Thread clientListenerThread;
 	// This class handle all the updates from the network.
@@ -67,7 +76,7 @@ public class GameOfLifeClient extends JFrame{
 
 		gridModel = new GridModel();
 		initGraphics(visible);
-		clientController = new ClientGridController(gridModel, commandPanel);
+		clientController = new ClientGridController(gridModel, commandPanel, cycleLabel);
 
 		// If the window is open ask for a server ip.
 		if(visible){
@@ -90,21 +99,23 @@ public class GameOfLifeClient extends JFrame{
 				askConnection();
 			}
 		});
-
 		// To avoid my button being stretched.
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(connect);
 
+		cycleLabel = new JLabel();
+		cycleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		// Initialize the panels
 		this.gridView = new GridView(gridModel);
 		this.commandPanel = new CommandPanel();
 		this.viewPanel = new JPanel();
 		this.viewPanel.setLayout(new BorderLayout());
+		this.viewPanel.add(cycleLabel, BorderLayout.NORTH);
 		this.viewPanel.add(gridView, BorderLayout.CENTER);
 		this.viewPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-		commandPanel.setBorder(BorderFactory.createEmptyBorder(Constants.PANEL_TOP_PADDING, 5, Constants.PANEL_BOTTOM_PADDING, 5));
-		viewPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, Constants.PANEL_BOTTOM_PADDING, 0));
+		commandPanel.setBorder(BorderFactory.createEmptyBorder(PANEL_TOP_PADDING, 5, PANEL_BOTTOM_PADDING, 5));
+		viewPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, PANEL_BOTTOM_PADDING, 0));
 
 		// Set the layout.
 		this.setLayout(new BorderLayout());

@@ -36,8 +36,8 @@ public class ServerGridController extends NetworkedGridController{
 	}
 
 	@Override
-	protected void processGridReset() {
-		super.processGridReset();
+	protected void processGridReset(int appationPercentage) {
+		super.processGridReset(appationPercentage);
 		timer.resetTimer();
 		// Server side a reset trigger a randomized world.
 		gridModel.populateRandomly();
@@ -109,6 +109,8 @@ public class ServerGridController extends NetworkedGridController{
 	/**
 	 * Forge the initialization message that contains the all the current grid state.
 	 * 
+	 * TODO I should used something more clean rather than a string to convert int to byte array.
+	 * 
 	 * @return The initialization message sent to the client on first connection.
 	 */
 	public byte[] getInitializationMessage() {
@@ -123,7 +125,13 @@ public class ServerGridController extends NetworkedGridController{
 
 		byte[] minCellRequirement = new String(""+gridModel.getMinimumCellRequirement()).getBytes();
 		byte[] maxCellRequirement = new String(""+gridModel.getMaximumCellRequirement()).getBytes();
+		
+		byte[] apparitionPercentage = new String(""+(int)gridModel.getApparitionPercentage()).getBytes();
+		byte[] byteToReadForApparitionPercentage = {(byte) apparitionPercentage.length};
 
+		byte[] currentCycle = new String(""+gridModel.getCycle()).getBytes();
+		byte[] byteToReadForCurrentCycle = {(byte) currentCycle.length};
+		
 		byte[] snapshot = gridModel.getWorldSnapShot().toByteArray();
 
 		if(DEBUG){
@@ -135,6 +143,8 @@ public class ServerGridController extends NetworkedGridController{
 		return UtilsFunctions.concatArray(code, byteToReadForGridSize, gridSize,
 				byteToReadForUpdateRate, gridUpdateRate,
 				minCellRequirement, maxCellRequirement,
+				byteToReadForApparitionPercentage, apparitionPercentage,
+				byteToReadForCurrentCycle, currentCycle,
 				snapshot);
 	}
 

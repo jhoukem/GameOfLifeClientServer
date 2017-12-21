@@ -60,7 +60,7 @@ public class ServerListener implements Runnable{
 
 
 	/**
-	 * Continuously read message from all clients.
+	 * Continuously read messages from all clients.
 	 */
 	@Override
 	public void run() {
