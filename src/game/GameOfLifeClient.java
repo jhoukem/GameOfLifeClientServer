@@ -17,14 +17,15 @@ import javax.swing.JPanel;
 
 import client.ClientListener;
 import model.GridModel;
-import networkcontrollers.ClientGridController;
+import networkcontroller.ClientGridController;
 import server.ServerListener;
 import utils.Constants;
 import view.CommandPanel;
 import view.GridView;
 
 /**
- * This class act as the game manager, it holds all the objects to make the game run.
+ * This class act as the game manager, it holds all the objects to make the game run. Connect to a server and display
+ * its state.
  * @author Jean-Hugo
  *
  */
@@ -53,14 +54,13 @@ public class GameOfLifeClient extends JFrame{
 	private SocketChannel clientSocket;
 
 	/**
-	 * By default the game open a window.
+	 * By default the client open a window.
 	 */
 	public GameOfLifeClient(){
 		this(true);
 	}
 
 	/**
-	 * 
 	 * @param visible Whether the game should open a JFrame. Useful for testing purpose.
 	 */
 	public GameOfLifeClient(boolean visible) {
@@ -75,14 +75,21 @@ public class GameOfLifeClient extends JFrame{
 		}
 	}
 
+	/**
+	 * Pop up a window that ask for a server ip to connect to and set up the connection if an ip is given.
+	 */
 	private void askConnection() {
 		String ip = JOptionPane.showInputDialog(null, "Server IP");
 		if(ip != null && !ip.isEmpty()){
 			connectTo(ip);
-			start();
 		}
 	}
 
+	/**
+	 * Initialize the graphic components Panel/Buttons etc...
+	 * 
+	 * @param visible whether to display the JFrame.
+	 */
 	private void initGraphics(boolean visible) {
 
 		// Init the buttons.
@@ -94,7 +101,7 @@ public class GameOfLifeClient extends JFrame{
 			}
 		});
 
-		// To avoid my button being streched.
+		// To avoid my button being stretched.
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(connect);
 
@@ -119,11 +126,21 @@ public class GameOfLifeClient extends JFrame{
 		this.setVisible(visible);
 	}
 
+	/**
+	 * Connect the client to the server with the given ip and set up the client listeners.
+	 * 
+	 * @param ip the server ip address.
+	 */
 	public void connectTo(String ip) {
 		initSocket(ip);
 		initNetworkListener();
 	}
 
+	/**
+	 * Create the client socket. The actual connection process happens here.
+	 * 
+	 * @param ip the server ip address.
+	 */
 	private void initSocket(String ip) {
 		try {
 			// If a previous socket existed we close it.
@@ -140,30 +157,41 @@ public class GameOfLifeClient extends JFrame{
 			if(isVisible()) {
 				JOptionPane.showMessageDialog(null, "Connection failed");
 			} else {
-				// If the game is not visible this should be a test and thus we want to log error.
+				// If the game is not visible then it is running as a test and thus we want to log errors.
 				e.printStackTrace();
 			}
 		}
 	}
 
+	/**
+	 * Set up the thread that will listen for server updates.
+	 */
 	private void initNetworkListener() {
 		// No need to keep a reference since the runnable will stop when the socket is closed.
 		clientListenerThread = new Thread(new ClientListener(clientSocket, clientController));
 		clientListenerThread.start();
 	}
 
-	private void start(){
-		while(isConnected()){
-			clientController.processPendingCommands();
+	/**
+	 * Keep processing the server commands such has snapshot, grid parameters etc...
+	 */
+	public void start(){
+		while(true){
+			if(isConnected()){
+				clientController.processPendingCommands();
+			}
 		}
 	}
 
+	/**
+	 * @return Whether the client is currently connected to a server.
+	 */
 	private boolean isConnected() {
 		return clientSocket != null && clientSocket.isConnected();
 	}
-	
+
 	public ClientGridController getClientController(){
 		return clientController;
 	}
-	
+
 }

@@ -1,4 +1,4 @@
-package networkcontrollers;
+package networkcontroller;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,6 +14,12 @@ import utils.Constants;
 import utils.Timer;
 import utils.UtilsFunctions;
 
+/**
+ * This class is used by both the server game and the server listener. It can store the update received from the clients 
+ * to process them later.
+ * 
+ * @author Jean-Hugo
+ */
 public class ServerGridController extends NetworkedGridController{
 
 	// Allow to easily switch debug log on/off.
@@ -35,15 +41,14 @@ public class ServerGridController extends NetworkedGridController{
 		timer.resetTimer();
 		// Server side a reset trigger a randomized world.
 		gridModel.populateRandomly();
-		//		gridModel.tata();
 	}
 
 	/**
 	 * Send a world snapshot to the connected client.
 	 * 
-	 * @return The BitSet representing the world current state.
+	 * @return The message representing the world current state send to the clients.
 	 */
-	public BitSet sendWorldSnapShotToClients() {
+	public byte[] sendWorldSnapShotToClients() {
 
 		BitSet bs = gridModel.getWorldSnapShot();
 
@@ -57,25 +62,19 @@ public class ServerGridController extends NetworkedGridController{
 			}
 			SocketChannel clientChannel = (SocketChannel) selectionKey.channel();
 			try {
+				// Create the snapshot message.
 				byte[] code = Constants.GRID_SNAPSHOT.getBytes();
 				byte[] snapshot = bs.toByteArray();
-
 				byte[] toSend = UtilsFunctions.concatArray(code, snapshot);
-
-				if(DEBUG){
-					bs = BitSet.valueOf(toSend);
-					UtilsFunctions.displayBitField(bs, "On send");
-				}
 
 				int byteSend = clientChannel.write(ByteBuffer.wrap(toSend));
 
 				if(Constants.DEBUG_BITSET){
 					System.out.println("[Server] send "+byteSend+" bytes");
-					System.out.println("[Server] string snapshot = "+ new String(bs.toByteArray()).toString());
 					System.out.println("[Server] bitSetCardinality = "+bs.cardinality());
 				}
 
-				return bs;
+				return toSend;
 			} catch (IOException e) {
 				selectionKey.cancel();
 				e.printStackTrace();
@@ -84,7 +83,11 @@ public class ServerGridController extends NetworkedGridController{
 		return null;
 	}
 
-
+	/**
+	 * Forge the initialization message that contains the all the current grid state.
+	 * 
+	 * @return The initialization message sent to the client on first connection.
+	 */
 	public byte[] getInitializationMessage() {
 
 		byte[] code = Constants.GRID_INITIALIZATION.getBytes();
@@ -115,6 +118,5 @@ public class ServerGridController extends NetworkedGridController{
 	public void setSelector(Selector selector) {
 		this.selector = selector;
 	}
-
 
 }

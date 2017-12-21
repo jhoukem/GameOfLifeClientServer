@@ -9,19 +9,18 @@ import utils.Constants;
  * This class represent the grid of the simulation, this is the model of the game.
  * 
  * @author Jean-Hugo
- *
  */
 public class GridModel extends Observable{
 
-
+	private static final int APPARITION_PERCENTAGE = 20;
 	// The maximum size that a grid can take.
-	transient public static final int MAXIMUM_GRID_SIZE = 100;
+	public static final int MAXIMUM_GRID_SIZE = 100;
 	// The size of the grid by default.
-	transient public static final int DEFAULT_GRID_SIZE = 10;
+	public static final int DEFAULT_GRID_SIZE = 10;
 
 	// A 2 dimensional array that represent the current simulation (true = cell alive, false = dead_cell).
 	private boolean grid[][] = new boolean[MAXIMUM_GRID_SIZE][MAXIMUM_GRID_SIZE];
-	// Same as above but used to check the game state during the update without interfering the game state.
+	// Same as above but used to calculate the next game state without interfering with the current game state.
 	private boolean gridReference[][] = new boolean[MAXIMUM_GRID_SIZE][MAXIMUM_GRID_SIZE];
 
 	// The current size of the grid.
@@ -31,7 +30,7 @@ public class GridModel extends Observable{
 	private int cycle = 0;
 
 	// The time in millisecond between each call to update.
-	private int updateRate = 5000;
+	private int updateRate = 1000;
 
 	// Default interval for a living cell to stay alive.
 	private int minInterval = 2;
@@ -54,60 +53,16 @@ public class GridModel extends Observable{
 	}
 
 	/**
-	 * Creates a basic periodic structure.
+	 * Creates a basic periodic structure (for testing purpose).
 	 * 
-	 * @param x
+	 * @param x 
 	 * @param y
 	 */
-	private void createBar(int x, int y) {
-
-		setCell(getCorrectPosition(y-1), x, true);
+	public void createBar(int x, int y) {
+		setCell(getCorrectPosition(y - 1), x, true);
 		setCell(y, x, true);
-		setCell(getCorrectPosition(y+1), x, true);
+		setCell(getCorrectPosition(y + 1), x, true);
 	}
-
-	public void tata() {
-//		setAllGridsTo(true);
-//		setCell(currentGridSize-1, currentGridSize-1, true);
-		
-		/*createBar(currentGridSize/2, currentGridSize/2);
-		createBar(currentGridSize/2+1, currentGridSize/2);
-		createBar(currentGridSize/2-1, currentGridSize/2);
-
-		/*setCell(0, 0, true);
-		setCell(0, 1, true);
-		setCell(1, 0, true);
-		setCell(1, 1, true);
-
-		setCell(1, 1, true);
-		setCell(1, 2, true);
-		setCell(2, 1, true);
-		setCell(2, 2, true);
-		setCell(2, 3, true);
-		setCell(1, 0, true);
-
-		setCell(1, 1, true);
-		setCell(1, 2, true);
-		setCell(2, 1, true);
-		setCell(2, 2, true);
-		setCell(5, 3, true);
-		setCell(6, 0, true);
-		setCell(8, 1, true);
-		setCell(5, 2, true);
-		setCell(5, 1, true);
-		setCell(4, 2, true);
-		setCell(2, 3, true);
-		setCell(5, 9, true);
-		setCell(1, 5, true);
-		setCell(3, 2, true);
-		setCell(8, 8, true);
-		setCell(3, 3, true);
-		setCell(7, 3, true);
-		setCell(5, 6, true);*/
-
-		notifyObservers();
-	}
-
 
 	/**
 	 * Reset the all grid cells to the given value (true = alive, false = dead).
@@ -121,16 +76,22 @@ public class GridModel extends Observable{
 		notifyObservers();
 	}
 
+	/**
+	 * Reset the counter cycle and set all the grid cells to dead.
+	 */
 	public void resetGrid(){
 		cycle = 0;
 		setAllGridsTo(false);
 		notifyObservers();
 	}
 
+	/**
+	 * Fill the grid with random cells.
+	 */
 	public void populateRandomly(){
 		for (int i = 0; i < currentGridSize; i++) {
 			for (int j = 0; j < currentGridSize; j++) {
-				if(Math.random()*100 < 20){
+				if(Math.random()*100 < APPARITION_PERCENTAGE){
 					setCell(i, j, true);
 				} else {
 					setCell(i, j, false);
@@ -152,19 +113,18 @@ public class GridModel extends Observable{
 
 				// Check in the grid reference so the update do not affect the current grid state.
 				if(gridReference[i][j]){
-					// Die if it does not have 2 or 3 neighbors.
+					// Die if it hasn't the correct number of neighbors.
 					grid[i][j] = (neighborsCount >= minInterval && neighborsCount <= maxInterval);
 				} else {
 					// Become alive if it has just 3 neighbors.
 					grid[i][j] = (neighborsCount == 3);
 				}
-
 			}
 		}
 		updateGridReference();
 		notifyObservers();
 	}
-
+	
 	public void incrementCycle() {
 		cycle++;		
 	}
@@ -227,7 +187,7 @@ public class GridModel extends Observable{
 	}
 
 	/**
-	 * I overridden this method for convenience since I don't want to call setChanged everytime.
+	 * I overridden this method for convenience since I don't want to call setChanged every time.
 	 */
 	@Override
 	public void notifyObservers() {
@@ -236,11 +196,37 @@ public class GridModel extends Observable{
 	}
 
 	/**
-	 * Convenient method to set a cell to the given state since we need to populate both the reference grid and the actual grid.
+	 * Convenient method to set a cell to the given state since we need to populate both the reference and the actual grid.
 	 */
 	private void setCell(int i, int j, boolean alive) {
 		grid[i][j] = alive;
 		gridReference[i][j] = alive;
+	}
+
+	/**
+	 * If the size it within the max and min bound, it will set the grid size accordingly to the
+	 * given size.
+	 * @param newGridSize The new size for the grid.
+	 */
+	public void setCurrentSize(int newGridSize) {
+		if(newGridSize >= DEFAULT_GRID_SIZE && newGridSize <= MAXIMUM_GRID_SIZE){
+			this.currentGridSize = newGridSize;
+			// Set all the cell beyond the grid border to dead.
+			for(int i = currentGridSize; i < grid.length; i++){
+				for (int j = currentGridSize; j < grid.length; j++) {
+					setCell(i, j, false);
+				}
+			}
+			notifyObservers();
+		} else {
+			System.err.println("Invalid size given: "+ newGridSize);
+		}
+	}
+
+	public void setUpdateRate(int newUpdateRate) {
+		if(newUpdateRate >= Constants.MINIMUM_UPDATE_RATE && newUpdateRate < Constants.MAXIMUM_UPDATE_RATE){
+			this.updateRate = newUpdateRate;
+		}
 	}
 
 	public int getCycle() {
@@ -255,96 +241,48 @@ public class GridModel extends Observable{
 		return currentGridSize;
 	}
 
-	public void setCurrentSize(int actualSize) {
-		if(actualSize >= DEFAULT_GRID_SIZE && actualSize <= MAXIMUM_GRID_SIZE){
-			this.currentGridSize = actualSize;
-
-			// Kill all the cell beyond the grid border.
-			for(int i = currentGridSize; i < grid.length; i++){
-				for (int j = currentGridSize; j < grid.length; j++) {
-					setCell(i, j, false);
-				}
-			}
-
-			notifyObservers();
-		}
-	}
-
-	public void setUpdateRate(int newUpdateRate) {
-		if(newUpdateRate >= Constants.MINIMUM_UPDATE_RATE && newUpdateRate < Constants.MAXIMUM_UPDATE_RATE){
-			this.updateRate = newUpdateRate;
-		}
-	}
-
 	public float getUpdateRate() {
 		return updateRate;
 	}
 
 	/**
-	 * To represent the world, I used a bitfield. Each bit represent a cell a bit set to 1 is a living cell and a bit set to 0
+	 * To represent the world, I used a BitSet. Each bit represent a cell a bit set to 1 is a living cell and a bit set to 0
 	 * is a dead cell. I start from the top left corner.
-	 * @return A bitfield representing the current living cells.
+	 * 
+	 * @return A BitSet representing the current grid state.
 	 */
 	public BitSet getWorldSnapShot() {
-		BitSet bs = new BitSet();
+		BitSet bitField = new BitSet();
 		for (int i = 0; i < currentGridSize; i++) {
 			for (int j = 0; j < currentGridSize; j++) {
 				int idx = currentGridSize * i + j;
 				if(grid[i][j]){
-					bs.set(idx);
+					bitField.set(idx);
 				} else {
-					bs.clear(idx);
+					bitField.clear(idx);
 				}
 			}
 		}
-
-		int gridCellCount = getAliveCellCount();
-		int bitSetCount = bs.cardinality();
-		if(gridCellCount != bitSetCount){
-			System.err.println("[Server] Error the bitfield contains "+ bitSetCount +" living cell but the grid has "+gridCellCount);
-		}
 		
-		
-		return bs;
+		return bitField;
 	}
 
 	/**
-	 * Use the bitfield to populate the world.
-	 * @param bs
+	 * Use the BitSet to populate the world. The BitSet act as a bitField the bit num "x" correspond to a
+	 * cell in the grid. If the bit is set then the corresponding cell is alive if the bit is missing or unset then the corresponding
+	 * cell is dead.
+	 * 
+	 * @param bitField
 	 */
-	public void populateWithSnapshot(BitSet bs) {
+	public void populateWithSnapshot(BitSet bitField) {
 
 		for (int i = 0; i < currentGridSize; i++) {
 			for (int j = 0; j < currentGridSize; j++) {
-				boolean alive = bs.get(currentGridSize * i +j);
+				boolean alive = bitField.get(currentGridSize * i +j);
 				setCell(i, j, alive);
 			}
 		}
-
-		int gridCellCount = getAliveCellCount();
-		int bitSetCount = bs.cardinality();
-		
-		if(gridCellCount != bitSetCount){
-			System.err.println("[Client] Error the bitfield contains "+ bitSetCount +" living cell but the grid has "+gridCellCount);
-		}
-		
 		notifyObservers();
-	}
-
-	/**
-	 * Return the number of cell alive in the current simulation.
-	 * @return
-	 */
-	public int getAliveCellCount(){
-		int total = 0;
-		for (int i = 0; i < currentGridSize; i++) {
-			for (int j = 0; j < currentGridSize; j++) {
-				if(grid[i][j]){
-					total++;
-				}
-			}
-		}
-		return total;
 	}
 
 	public void setCellRequirement(int min, int max) {

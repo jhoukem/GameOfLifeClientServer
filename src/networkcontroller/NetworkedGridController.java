@@ -1,10 +1,15 @@
-package networkcontrollers;
+package networkcontroller;
 
 import java.util.ArrayList;
 
 import model.GridModel;
 import utils.Constants;
 
+/**
+ * An abstract class to set up the base of listening and updating a grid from network update.
+ * 
+ * @author Jean-Hugo
+ */
 public abstract class NetworkedGridController {
 
 	protected static final int DATA = 1;
@@ -13,29 +18,39 @@ public abstract class NetworkedGridController {
 	// The game model.
 	protected GridModel gridModel;
 	// Command received from clients that still need to be processed.
-	protected ArrayList<String> pendingCommands = new ArrayList<String>();
+	protected ArrayList<byte[]> pendingCommands = new ArrayList<byte[]>();
 	
 
 	public NetworkedGridController(GridModel gridModel) {
 		this.gridModel = gridModel;
 	}
 
-	public void addPendingCommand(String msg){
+	/**
+	 * Add the given byte array to the commands that will be processed later.
+	 * 
+	 * @param message the server command to add.
+	 */
+	public void addPendingCommand(byte[] message){
 		synchronized (pendingCommands) {
-			pendingCommands.add(msg);
+			pendingCommands.add(message);
 		}
 	}
 
+	/**
+	 * Process all the commands send by the client if there is any.
+	 * 
+	 * @return Whether the clients need to be updated about the game state
+	 */
 	public boolean processPendingCommands() {
 
 		boolean needUpdate = false;
 
 		synchronized (pendingCommands) {
 
-			for(String msg : pendingCommands){
+			for(byte[] message : pendingCommands){
 				// When a command has been received, an update is necessary.
 				needUpdate = true;
-				processCommand(msg);
+				processCommand(message);
 			}
 			pendingCommands.clear();
 		}
@@ -43,12 +58,18 @@ public abstract class NetworkedGridController {
 		return needUpdate;
 	}
 
-	protected void processCommand(String msg) {
+	/**
+	 * Update the grid according to the given command.
+	 * TODO check for malformed commands ?
+	 * 
+	 * @param message the server command to process.
+	 */
+	protected void processCommand(byte[] message) {
 
 		// Remove any trailing space.
-		msg = msg.trim();
+		String messageString = new String(message).trim();
 
-		String [] command = msg.split(":");
+		String[] command = messageString.split(":");
 
 		switch (command[TYPE]) {
 		case Constants.CHANGE_GRID_SIZE_COMMAND:

@@ -20,6 +20,11 @@ import javax.swing.event.ChangeListener;
 import model.GridModel;
 import utils.Constants;
 
+/**
+ * This class allow a client to send command to a server.
+ * 
+ * @author Jean-Hugo
+ */
 public class CommandPanel extends JPanel implements ActionListener, ChangeListener{
 
 	/**
@@ -27,7 +32,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	 */
 	private static final long serialVersionUID = 1L;
 
-	// The client socket which is conencted to the server.
+	// The client socket which is connected to the server.
 	private SocketChannel clientSocket;
 
 	// Used to control the grid size.
@@ -41,7 +46,10 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	private JSlider minimumNeighborsSlider;
 	private JSlider maximumNeighborsSlider;
 
-	// Usefull to know if the update is comming from the client or from the server.
+	/** 
+	 * Useful to know if the update is coming from the client or from the server.
+	 * Because any update a client make is echoed back to him.
+	 */
 	private boolean onServerUpdate = false;
 
 	// Whether a slicer is updating another one.
@@ -52,39 +60,17 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	}
 
 	/**
-	 * Set up the necessary component for the client to send command to the server.
+	 * Set up the necessary graphic component for the client to send command to the server.
 	 */
 	private void initGui() {
 
 		createComponents();
-
 		setUpLayout();
 	}
 
-	private void setUpLayout() {
-
-		Panel controlPanel = new Panel();
-		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
-		controlPanel.add(gridSizeSlider);
-		controlPanel.add(gridUpdateRateSlider);
-
-
-		Panel panel = new Panel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-		panel.add(minimumNeighborsSlider);
-		panel.add(maximumNeighborsSlider);
-
-		controlPanel.add(panel);
-		this.setLayout(new BorderLayout());
-
-		this.add(controlPanel, BorderLayout.CENTER);
-
-		// To avoid my button being streched.
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.add(reset);
-		this.add(buttonPanel, BorderLayout.SOUTH);
-	}
-
+	/**
+	 * Create all the graphic component needed.
+	 */
 	private void createComponents() {
 		gridSizeSlider = new JSlider(GridModel.DEFAULT_GRID_SIZE, GridModel.MAXIMUM_GRID_SIZE);
 
@@ -125,6 +111,37 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		reset.addActionListener(this);
 	}
 
+	/**
+	 * Arrange the graphic component in the correct order.
+	 */
+	private void setUpLayout() {
+
+		Panel controlPanel = new Panel();
+		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+		controlPanel.add(gridSizeSlider);
+		controlPanel.add(gridUpdateRateSlider);
+
+
+		Panel panel = new Panel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		panel.add(minimumNeighborsSlider);
+		panel.add(maximumNeighborsSlider);
+
+		controlPanel.add(panel);
+		this.setLayout(new BorderLayout());
+
+		this.add(controlPanel, BorderLayout.CENTER);
+
+		// To avoid my button being streched.
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.add(reset);
+		this.add(buttonPanel, BorderLayout.SOUTH);
+	}
+
+
+	/**
+	 * Listener for the JSliders
+	 */
 	@Override
 	public void stateChanged(ChangeEvent ce) {
 
@@ -164,6 +181,9 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 	}
 
+	/**
+	 * Listener for the button.
+	 */
 	@Override
 	public void actionPerformed(ActionEvent ap) {
 		if(onServerUpdate){
@@ -177,7 +197,12 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 
 	}
 
-	private void send(String cmd) {
+	/**
+	 * Send the given command to the server.
+	 * 
+	 * @param command The command to send.
+	 */
+	private void send(String command) {
 
 		// Not connected yet.
 		if(clientSocket == null){
@@ -185,7 +210,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 
 		try {
-			ByteBuffer buffer = ByteBuffer.wrap(cmd.getBytes());
+			ByteBuffer buffer = ByteBuffer.wrap(command.getBytes());
 			clientSocket.write(buffer);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -196,29 +221,45 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		this.clientSocket = socket;
 	}
 
-	public void setCurrentGridSize(int currentGridSize) {
+	/**
+	 * When a command is received from the server to update the grid size, it has to be reflected on the JSlider.
+	 * 
+	 * @param newGridSize the new size for the grid.
+	 */
+	public void setCurrentGridSize(int newGridSize) {
 		onServerUpdate = true;
 		// If the client is not currently using this slicer.
 		if(!gridSizeSlider.getValueIsAdjusting()){
-			gridSizeSlider.setValue(currentGridSize);
+			gridSizeSlider.setValue(newGridSize);
 		}
 		onServerUpdate = false;
 	}
 
-	public void setCurrentUpdateRate(int currentUpdateRate) {
+	/**
+	 * When a command is received from the server to update the grid update rate, it has to be reflected on the JSlider.
+	 * 
+	 * @param newUpdateRate the update rate for the grid.
+	 */
+	public void setCurrentUpdateRate(int newUpdateRate) {
 		onServerUpdate = true;
 		// If the client is not currently using this slicer.
 		if(!gridUpdateRateSlider.getValueIsAdjusting()){
-			this.gridUpdateRateSlider.setValue(currentUpdateRate);		
+			this.gridUpdateRateSlider.setValue(newUpdateRate);		
 		}
 		onServerUpdate = false;
 	}
 
+	/**
+	 * When a command is received from the server to update the grid cells requirement, it has to be reflected on the JSliders.
+	 * 
+	 * @param min the minimal value interval for a cell to survive.
+	 * @param max the maximal value interval for a cell to survive.
+	 */
 	public void setCellRequirement(int min, int max) {
 		onServerUpdate = true;
 
 		if(GridModel.cellRequirementCorrect(min, max)){
-			
+
 			// If the client is not currently using this slicer.
 			if(!minimumNeighborsSlider.getValueIsAdjusting()){
 				this.minimumNeighborsSlider.setValue(min);

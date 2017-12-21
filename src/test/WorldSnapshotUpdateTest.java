@@ -1,72 +1,104 @@
 package test;
 
-import static org.junit.Assert.*;
-
-import java.util.BitSet;
+import static org.junit.Assert.fail;
 
 import game.GameOfLifeClient;
 import game.GameOfLifeServer;
-import utils.UtilsFunctions;
 
 public class WorldSnapshotUpdateTest {
 
-
+	// The number of time to reset the world.
+	private static final int ITERATION = 100;
+	// For every iteration the grid will be updated this amount of time.
+	private static final int NUMBER_OF_SIMULATION_PER_ITERATION = 500;
 
 	private static final String LOCALHOST = "127.0.0.1";
 	private static final int GRID_SIZE_FOR_TEST = 10;
 
 	@org.junit.Test
 	public void testClientReceivedCorrectMessageFromServer() {
-		
+
 		// Set to false since we do not want the JFrame to be visible.
 		GameOfLifeServer server = new GameOfLifeServer(false);
 		GameOfLifeClient client = new GameOfLifeClient(false);
-		client.connectTo(LOCALHOST);
-		server.getGrid().setCurrentSize(GRID_SIZE_FOR_TEST);
 
-		for (int i = 0; i < 100; i++) {
+		// Set up the client/server.
+		server.getGrid().setCurrentSize(GRID_SIZE_FOR_TEST);
+		client.connectTo(LOCALHOST);
+		
+		for (int i = 0; i < ITERATION; i++) {
 			server.getGrid().resetGrid();
 			server.getGrid().populateRandomly();
-			for (int j = 0; j < 100; j++) {
-
-				server.getGrid().update();
-				BitSet serverSnapshot = server.getServerGridController().sendWorldSnapShotToClients();
-				
-				BitSet clientSnapshot = null;
-				do {
-					// This function should update the client world using the BitSet send by the server.
-					client.getClientController().processPendingCommands();
-					clientSnapshot = client.getClientController().popLastSnapshotReceived();
-				} while(clientSnapshot == null);
-				
-				// Compare the two snapshot.
-				boolean equals = isSnapShotEquals(serverSnapshot, clientSnapshot);
-				
-				// If they are not equal, we print some debug info.
-				if(!equals){
-					System.out.println("i = "+i+" j= "+j);	
-					UtilsFunctions.displayBitField(serverSnapshot, "[SERVEUR]");
-					UtilsFunctions.displayBitField(clientSnapshot, "[CLIENT]");
-				}
-
-				assertTrue(equals);
-			}
+			testSendReceive(server, client);
 		}
-
 	}
 
-	private boolean isSnapShotEquals(BitSet snapshot1, BitSet snapshot2) {
+	/**
+	 * Test that the client receive the correct data from the server.
+	 * 
+	 * @param server
+	 * @param client
+	 */
+	private void testSendReceive(GameOfLifeServer server, GameOfLifeClient client) {
+		
+		for (int i = 0; i < NUMBER_OF_SIMULATION_PER_ITERATION; i++) {
+			
+			// Update the server grid.
+			server.getGrid().update();
+			
+			// Send a world snapshot to the client.
+			byte[] send = server.getServerGridController().sendWorldSnapShotToClients();
 
-		float snapshotSize = snapshot1.length();
+			// Get the snapshot on client.
+			byte[] received = null;
+			do {
+				// This function should update the client world using the BitSet send by the server.
+				client.getClientController().processPendingCommands();
+				// Get the last snapshot received by the client.
+				received = client.getClientController().popLastSnapshotMessageReceived();
+			} while(received == null);
 
-		for (int i = 0; i < snapshotSize; i++) {
-			if(snapshot1.get(i) != snapshot2.get(i)){
-				System.err.println("snapshot1["+i+"]="+snapshot1.get(i)+"\nsnapshot2["+i+"]="+snapshot2.get(i));
-				return false;
+			// If it is not equals to the server snapshot
+			if(dataNotEqual(send, received)){
+				// Display the byte for debugging.
+				displayArray(send, "s");
+				displayArray(received, "r");
+				// Fail the test.
+				fail("The received byte arrays are not equal");
 			}
 		}
-
-		return true;
 	}
 
+	/**
+	 * Compare 2 byte array data. Stop comparison at the first array size and does not care about array size differences. 
+	 * @param send
+	 * @param received
+	 * @return
+	 */
+	private boolean dataNotEqual(byte[] send, byte[] received) {
+		// I don't care if they are not the same size since the trailing space will be considered as dead cells anyway.
+		for(int i = 0; i < send.length; i++){
+			if(send[i] != received[i]){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Convenient method to display a byte array with a label to identify it.
+	 * 
+	 * @param array
+	 * @param label
+	 */
+	private void displayArray(byte[] array, String label) {
+
+		for(int i = 0; i < array.length; i++){
+			System.out.print(label+"["+i+"]="+array[i]);
+			if(i < array.length - 1){
+				System.out.print(", ");
+			}
+		}
+		System.out.println();
+	}
 }

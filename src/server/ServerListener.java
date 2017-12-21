@@ -11,33 +11,32 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import networkcontrollers.ServerGridController;
+import networkcontroller.ServerGridController;
 import utils.Constants;
 import utils.UtilsFunctions;
 
+/**
+ * This class is responsible for listening to any clients message and to store them in a list for a later processing.
+ * 
+ * @author Jean-Hugo
+ *
+ */
 public class ServerListener implements Runnable{
 
 	// Allow to easily switch debug log on/off.
 	private final static boolean DEBUG = false;
-
 	// The port the server will listen on.
 	public static final int SERVER_PORT = 9999;
-
 	// The controller that will handle data received from client.
 	private ServerGridController serverController;
 
 	// A list that keep a reference to all the connected client sockets.
 	//private ArrayList<SocketChannel> clientSockets = new ArrayList<SocketChannel>();
 
+	// The selector allow to watch multiple socket without being blocked.
 	private Selector selector;
 	// The socket channel to listen for client connection/inputs.
 	private ServerSocketChannel serverSocketChannel;
-
-	// The buffer used to read from client channels. TODO use later
-	//	private ByteBuffer buffer = ByteBuffer.allocate(Constants.BUFFER_SIZE);
-
-	// Useful to stop the thread when the server run on gui mode.
-	private boolean running = true;
 
 	public ServerListener(ServerGridController controller) {
 		this.serverController = controller;
@@ -45,6 +44,9 @@ public class ServerListener implements Runnable{
 		this.serverController.setSelector(selector);
 	}
 
+	/**
+	 * Create the server socket and set up the listening process.
+	 */
 	private void initSocket() {
 		try {
 			selector = Selector.open();
@@ -60,15 +62,16 @@ public class ServerListener implements Runnable{
 	}
 
 
+	/**
+	 * Continuously read message from all clients.
+	 */
 	@Override
 	public void run() {
-		while(running){
+		while(true){
 			try {
-
 				if (selector.select() <= 0) {
 					continue;
 				}
-
 				processReadySet(selector.selectedKeys());
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -76,6 +79,11 @@ public class ServerListener implements Runnable{
 		}
 	}
 
+	/**
+	 * When the server has a channel ready for an operation (accept/read) this method is called.
+	 * 
+	 * @param readySet The Set representing the channel with pending operation.
+	 */
 	private void processReadySet(Set<SelectionKey> readySet) {
 
 		Iterator<SelectionKey> iterator = readySet.iterator();
@@ -85,12 +93,11 @@ public class ServerListener implements Runnable{
 
 			if (selectionKey.isAcceptable()) {
 				try {
-					ServerSocketChannel ssChannel = (ServerSocketChannel) selectionKey.channel();
-					SocketChannel clientChannel = (SocketChannel) ssChannel.accept();
+					SocketChannel clientChannel = (SocketChannel) serverSocketChannel.accept();
 					clientChannel.configureBlocking(false);
-					clientChannel.register(selectionKey.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+					SelectionKey clientSelectionKey = clientChannel.register(selectionKey.selector(), SelectionKey.OP_READ);
 					System.out.println("[Server]: New client connected with ip address: "+clientChannel.getRemoteAddress());
-					sendClientGridInit(clientChannel);
+					sendClientGridInit(clientSelectionKey);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -98,51 +105,58 @@ public class ServerListener implements Runnable{
 			}
 			if (selectionKey.isReadable()) {
 				try {
-					String msg = processRead(selectionKey);
-					if (!msg.isEmpty()) {
+					// Get the client message.
+					byte[] message = processRead(selectionKey);
+					
+					if (message.length > 0) {
 
 						// Add the command to the pending command list so it will be processed later.
-						serverController.addPendingCommand(msg);
-						sendCommandToClients(msg);
+						serverController.addPendingCommand(message);
+						// Send the command to the others clients.
+						sendCommandToClients(message);
 						if(DEBUG){
-							System.out.println("[Server] received command: "+msg);
+							System.out.println("[Server] received command: "+new String(message).trim());
 						}
 
 					}
 				} catch (IOException e) {
-					// On error cancel this key.
+					// Cancel this selection key on write error (Client disconnected ?).
 					selectionKey.cancel();
 				}
 			}
-
 			iterator.remove();
 		}
 	}
 
 	/**
-	 * The the current snapshot and the current grid parameters all at once to the new client connected.
+	 * Send to the client the complete grid state (snapshot + grid parameter).
 	 * 
-	 * @param clientChannel
+	 * @param selectionKey the client SocketChannel.
 	 */
-	private void sendClientGridInit(SocketChannel clientChannel) {
-		
+	private void sendClientGridInit(SelectionKey selectionKey) {
+
 		try {
-			
+
 			byte[] toSend = serverController.getInitializationMessage();
-			
+			// Send the data.
+			SocketChannel clientChannel = (SocketChannel) selectionKey.channel();
+			clientChannel.write(ByteBuffer.wrap(toSend));
 			if(DEBUG){
 				BitSet bs = BitSet.valueOf(toSend);
 				UtilsFunctions.displayBitField(bs, "On send");
 			}
-
-			// Send the current world snapshot.
-			clientChannel.write(ByteBuffer.wrap(toSend));
 		} catch (IOException e) {
-			e.printStackTrace();
+			// Cancel this selection key on write error (Client disconnected ?).
+			selectionKey.cancel();
 		}
 	}
 
-	private void sendCommandToClients(String msg) {
+	/**
+	 * Forward this message to all the clients.
+	 * 
+	 * @param message the message to be forwarded.
+	 */
+	private void sendCommandToClients(byte[] message) {
 
 		Iterator<SelectionKey> iterator = selector.keys().iterator();
 
@@ -154,28 +168,26 @@ public class ServerListener implements Runnable{
 			}
 			SocketChannel clientChannel = (SocketChannel) selectionKey.channel();
 			try {
-				clientChannel.write(ByteBuffer.wrap(msg.getBytes()));
+				clientChannel.write(ByteBuffer.wrap(message));
 			} catch (IOException e) {
+				// Cancel this selection key on write error (Client disconnected ?).
 				selectionKey.cancel();
-				e.printStackTrace();
 			}
 		}
 	}
 
-	public String processRead(SelectionKey key) throws IOException {
+	/**
+	 * Read a byte array from the client.
+	 * 
+	 * @param key The client SelectionKey
+	 * @return a byte array filled with the client message.
+	 * @throws IOException
+	 */
+	public byte[] processRead(SelectionKey key) throws IOException {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(Constants.BUFFER_SIZE);
-		int bytesCount = clientChannel.read(buffer);
-		if (bytesCount > 0) {
-			buffer.flip();
-			String msg = new String(buffer.array()).trim();
-			return msg;
-		}
-		return "";
-	}
-
-	public void setRunning(boolean running) {
-		this.running = running;
+		clientChannel.read(buffer);
+		return buffer.array();
 	}
 
 }

@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import networkcontrollers.ClientGridController;
+import networkcontroller.ClientGridController;
 import utils.Constants;
 
+/**
+ * This class is responsible for listening to any server message and to store them in a list for a later processing.
+ * 
+ * @author Jean-Hugo
+ *
+ */
 public class ClientListener implements Runnable {
-
-	// Allow to easily switch debug log on/off.
-	private final static boolean DEBUG = false;
 
 	// The client socket used to communicate with the server.
 	private SocketChannel clientSocket;
@@ -28,16 +31,10 @@ public class ClientListener implements Runnable {
 			try {
 				ByteBuffer buffer = ByteBuffer.allocate(Constants.BUFFER_SIZE);
 				int byteRead = clientSocket.read(buffer);
+				clientController.addPendingCommand(buffer.array());
 
 				if(Constants.DEBUG_BITSET){
 					System.out.println("[CLIENT] read "+byteRead+" bytes");
-				}
-
-				String rawMessage = new String(buffer.array());
-				clientController.addPendingCommand(rawMessage);
-				if(DEBUG){
-					System.out.println("[CLIENT] received: "+ rawMessage);
-					System.out.println("[CLIENT] received: "+ rawMessage.trim());
 				}
 			} catch (IOException e) {
 				// Connection failed the thread stops.

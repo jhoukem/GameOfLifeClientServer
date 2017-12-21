@@ -12,7 +12,8 @@ import utils.UtilsFunctions;
 import view.GridView;
 
 /**
- * This class act as the game manager, it holds all the objects to make the game run.
+ * This class act as the game manager, it holds all the objects to make the game run. Run the game locally.
+ * 
  * @author Jean-Hugo
  *
  */
@@ -37,6 +38,9 @@ public class GameOfLifeLocal extends JFrame{
 		start();
 	}
 
+	/**
+	 * Initialize the graphic components Panel/Buttons etc...
+	 */
 	private void initGraphics() {
 		this.setLayout(new BorderLayout());
 		this.add(gridView, BorderLayout.CENTER);
@@ -46,11 +50,14 @@ public class GameOfLifeLocal extends JFrame{
 		this.setVisible(true);
 	}
 
+	/**
+	 * Update the grid periodically.
+	 */
 	public void start(){
 		while(true){
-//			gridView.displayGridAscii();
+			gridView.displayGridAscii();
 			gridView.repaint();
-			UtilsFunctions.sleep(1);
+			UtilsFunctions.sleepSec(1);
 			gridModel.update();
 		}
 	}

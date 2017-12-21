@@ -11,8 +11,8 @@ import model.GridModel;
 
 /**
  *  This class can render a textual/graphical representation of the current grid state.
+ *  
  * @author Jean-Hugo
- *
  */
 public class GridView extends JPanel implements Observer{
 
@@ -55,13 +55,13 @@ public class GridView extends JPanel implements Observer{
 	 * @param g
 	 */
 	private void paintGrid(Graphics g) {
-		
+
 		int gridSize = gridModel.getCurrentGridSize();
 		boolean grid [][] = gridModel.getGrid();
 		int cellSize = getCorrectSize()/gridModel.getCurrentGridSize();
 		int widthPadding = (this.getWidth() - gridSize * cellSize) / 2;
 		int heightPadding = (this.getHeight() - gridSize * cellSize) / 2;
-				
+
 		for (int i = 0; i < gridSize; i++) {
 			for (int j = 0; j < gridSize; j++) {
 				if(grid[i][j]){
@@ -73,17 +73,19 @@ public class GridView extends JPanel implements Observer{
 			}
 		}
 	}
-	
 
 	/**
 	 * Allow to get the correct size reference for the cellSize calculation. We always want to get the shortest dimension.
-	 * @return
+	 * 
+	 * @return the correct size reference for the cellSize calculation.
 	 */
 	private int getCorrectSize() {
 		return this.getWidth() > this.getHeight() ? this.getHeight() : this.getWidth();
 	}
 
-
+	/**
+	 * Display the current grid state in ASCII.
+	 */
 	public void displayGridAscii(){
 
 		int gridSize = gridModel.getCurrentGridSize();
@@ -103,10 +105,12 @@ public class GridView extends JPanel implements Observer{
 		System.out.println();
 	}
 
-
+	/**
+	 * Will be called every time the grid change.
+	 */
 	@Override
 	public void update(Observable o, Object arg) {
-//		displayGridAscii();
+		//		displayGridAscii();
 		repaint();
 	}
 

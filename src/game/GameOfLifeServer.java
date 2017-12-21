@@ -5,12 +5,18 @@ import java.awt.BorderLayout;
 import javax.swing.JFrame;
 
 import model.GridModel;
-import networkcontrollers.ServerGridController;
+import networkcontroller.ServerGridController;
 import server.ServerListener;
 import utils.Constants;
 import utils.Timer;
 import view.GridView;
 
+/**
+ * This class act as the game manager, it holds all the objects to make the game run. Run a server so client can connect to it and display
+ * its game state.
+ * 
+ * @author Jean-Hugo
+ */
 public class GameOfLifeServer extends JFrame{
 
 	/**
@@ -29,11 +35,16 @@ public class GameOfLifeServer extends JFrame{
 	// Used to know when to perform an update without blocking the current thread.
 	private Timer timer = new Timer();
 
-	
+	/**
+	 * By default the server open a window.
+	 */
 	public GameOfLifeServer() {
 		this(true);
 	}
 
+	/**
+	 * @param visible Whether the game should open a JFrame. Useful for testing purpose.
+	 */
 	public GameOfLifeServer(boolean visible) {
 
 		gridModel = new GridModel();
@@ -44,7 +55,11 @@ public class GameOfLifeServer extends JFrame{
 		serverListener.start();
 	}
 
-
+	/**
+	 * Initialize the graphic components Panel/Buttons etc...
+	 * 
+	 * @param visible whether to display the JFrame.
+	 */
 	private void initGraphics(boolean visible) {
 		gridView = new GridView(gridModel);
 		this.setLayout(new BorderLayout());
@@ -56,6 +71,10 @@ public class GameOfLifeServer extends JFrame{
 	}
 
 
+	/**
+	 * Keep processing the client commands such has grid parameters, update periodically the game state
+	 * and send the game state to the clients.
+	 */
 	public void start(){
 
 		// Whether the game state has changed and need to be sent to the players.
