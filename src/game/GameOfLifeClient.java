@@ -79,7 +79,7 @@ public class GameOfLifeClient extends JFrame{
 
 		// If the window is open ask for a server ip.
 		if(visible){
-//			askConnection();
+			askConnection();
 		}
 	}
 
@@ -146,7 +146,7 @@ public class GameOfLifeClient extends JFrame{
 		initSocket(ip);
 		if(isConnected()){
 			initNetworkListener();
-			
+
 		}
 	}
 
