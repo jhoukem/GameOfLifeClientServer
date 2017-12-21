@@ -30,9 +30,6 @@ public class ServerListener implements Runnable{
 	// The controller that will handle data received from client.
 	private ServerGridController serverController;
 
-	// A list that keep a reference to all the connected client sockets.
-	//private ArrayList<SocketChannel> clientSockets = new ArrayList<SocketChannel>();
-
 	// The selector allow to watch multiple socket without being blocked.
 	private Selector selector;
 	// The socket channel to listen for client connection/inputs.

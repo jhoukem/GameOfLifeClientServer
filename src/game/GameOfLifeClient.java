@@ -76,16 +76,6 @@ public class GameOfLifeClient extends JFrame{
 	}
 
 	/**
-	 * Pop up a window that ask for a server ip to connect to and set up the connection if an ip is given.
-	 */
-	private void askConnection() {
-		String ip = JOptionPane.showInputDialog(null, "Server IP");
-		if(ip != null && !ip.isEmpty()){
-			connectTo(ip);
-		}
-	}
-
-	/**
 	 * Initialize the graphic components Panel/Buttons etc...
 	 * 
 	 * @param visible whether to display the JFrame.
@@ -126,6 +116,17 @@ public class GameOfLifeClient extends JFrame{
 		this.setVisible(visible);
 	}
 
+
+	/**
+	 * Pop up a window that ask for a server ip to connect to and set up the connection if an ip is given.
+	 */
+	private void askConnection() {
+		String ip = JOptionPane.showInputDialog(null, "Server IP");
+		if(ip != null && !ip.isEmpty()){
+			connectTo(ip);
+		}
+	}
+
 	/**
 	 * Connect the client to the server with the given ip and set up the client listeners.
 	 * 
@@ -133,7 +134,9 @@ public class GameOfLifeClient extends JFrame{
 	 */
 	public void connectTo(String ip) {
 		initSocket(ip);
-		initNetworkListener();
+		if(isConnected()){
+			initNetworkListener();
+		}
 	}
 
 	/**
@@ -150,9 +153,6 @@ public class GameOfLifeClient extends JFrame{
 			clientSocket = SocketChannel.open(new InetSocketAddress(ip , ServerListener.SERVER_PORT));
 			commandPanel.setSocket(clientSocket);
 			System.out.println("Connected to the server: "+clientSocket.socket().getRemoteSocketAddress());
-			if(isVisible()){
-				JOptionPane.showMessageDialog(null, "Connection successful");
-			}
 		} catch (IOException e) {
 			if(isVisible()) {
 				JOptionPane.showMessageDialog(null, "Connection failed");
@@ -177,9 +177,7 @@ public class GameOfLifeClient extends JFrame{
 	 */
 	public void start(){
 		while(true){
-			if(isConnected()){
-				clientController.processPendingCommands();
-			}
+			clientController.processPendingCommands();
 		}
 	}
 

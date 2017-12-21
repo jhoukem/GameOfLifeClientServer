@@ -50,37 +50,60 @@ public class ServerGridController extends NetworkedGridController{
 	 */
 	public byte[] sendWorldSnapShotToClients() {
 
-		BitSet bs = gridModel.getWorldSnapShot();
+		if(clientsConnected()){
 
+			BitSet bs = gridModel.getWorldSnapShot();
+
+			// Create the snapshot message.
+			byte[] code = Constants.GRID_SNAPSHOT.getBytes();
+			byte[] snapshot = bs.toByteArray();
+			byte[] toSend = UtilsFunctions.concatArray(code, snapshot);
+
+			if(Constants.DEBUG_BITSET){
+				System.out.println("[Server] bitSetCardinality = "+bs.cardinality());
+			}
+			
+			sendToClients(toSend);
+			return toSend;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * If there is more than one channel registered then there is clients that are connected.
+	 * 
+	 * @return true if there is a least a client connected false otherwise.
+	 */
+	private boolean clientsConnected() {
+		return selector.keys().size() > 1;
+	}
+
+	private void sendToClients(byte[] toSend) {
+		
 		Iterator<SelectionKey> iterator = selector.keys().iterator();
 
 		// Iterate through all the connected clients.
 		while (iterator.hasNext()) {
 			SelectionKey selectionKey = iterator.next();
+			// If it is the server channel continue.
 			if(selectionKey.channel() instanceof ServerSocketChannel){
 				continue;
 			}
+			// Valid client channel.
 			SocketChannel clientChannel = (SocketChannel) selectionKey.channel();
 			try {
-				// Create the snapshot message.
-				byte[] code = Constants.GRID_SNAPSHOT.getBytes();
-				byte[] snapshot = bs.toByteArray();
-				byte[] toSend = UtilsFunctions.concatArray(code, snapshot);
 
 				int byteSend = clientChannel.write(ByteBuffer.wrap(toSend));
 
 				if(Constants.DEBUG_BITSET){
 					System.out.println("[Server] send "+byteSend+" bytes");
-					System.out.println("[Server] bitSetCardinality = "+bs.cardinality());
 				}
-
-				return toSend;
 			} catch (IOException e) {
 				selectionKey.cancel();
 				e.printStackTrace();
 			}
 		}
-		return null;
 	}
 
 	/**

@@ -19,7 +19,7 @@ public class ClientGridController extends NetworkedGridController{
 	private CommandPanel commandPanel;
 	// The the previous snapshot message received. Used for testing purposes.
 	private byte[] lastSnapshotMessageReceived;
-	
+
 	public ClientGridController(GridModel gridModel, CommandPanel commandPanel) {
 		super(gridModel);
 		this.commandPanel = commandPanel;
@@ -27,16 +27,16 @@ public class ClientGridController extends NetworkedGridController{
 
 	@Override
 	public boolean processPendingCommands() {
-
-		// When a command has been received, an update is necessary.
-		boolean needUpdate = !pendingCommands.isEmpty();
-
+		boolean needUpdate = false;
+		
 		synchronized (pendingCommands) {
-
 			for(byte[] message : pendingCommands){
-
-				if(isWorldSnapshot(message)){
-					processWorldSnapshot(message);
+				
+				// When a command has been received, an update is necessary.
+				needUpdate = true;
+				
+				if(isGridSnapshot(message)){
+					processGridSnapshot(message);
 				} else if(isWorldInit(message)){
 					processWorldInit(message);
 				} else {
@@ -94,7 +94,7 @@ public class ClientGridController extends NetworkedGridController{
 
 		// Initialize the grid tab.
 		byte[] snapshot = Arrays.copyOfRange(message, offset, message.length);
-		processWorldSnapshot(snapshot);
+		processGridSnapshot(snapshot);
 	}
 
 	@Override
@@ -126,17 +126,17 @@ public class ClientGridController extends NetworkedGridController{
 	 * 
 	 * @param message the data send by the server.
 	 */
-	private void processWorldSnapshot(byte[] message) {
+	private void processGridSnapshot(byte[] message) {
 
 		this.lastSnapshotMessageReceived = message;
-		
+
 		// Remove the message code to only keep the snapshot.
 		byte[] snapshotByte = Arrays.copyOfRange(message, 1, message.length);
 		BitSet bitField = BitSet.valueOf(snapshotByte);
 
 		gridModel.populateWithSnapshot(bitField);
 		gridModel.incrementCycle();
-		
+
 		if(Constants.DEBUG_BITSET){
 			System.out.println("[CLIENT] bitSetCardinality = "+bitField.cardinality());
 		}
@@ -155,7 +155,7 @@ public class ClientGridController extends NetworkedGridController{
 	 * @param message the data send by the server.
 	 * @return whether the current message concern a world snapshot.
 	 */
-	private boolean isWorldSnapshot(byte[] message) {
+	private boolean isGridSnapshot(byte[] message) {
 		String code = new String(message, 0, 1);
 		return code.equals(Constants.GRID_SNAPSHOT);
 	}
