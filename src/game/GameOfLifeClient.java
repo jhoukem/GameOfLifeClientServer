@@ -131,7 +131,7 @@ public class GameOfLifeClient extends JFrame{
 	 * Pop up a window that ask for a server ip to connect to and set up the connection if an ip is given.
 	 */
 	private void askConnection() {
-		String ip = JOptionPane.showInputDialog(null, "Server IP");
+		String ip = JOptionPane.showInputDialog(this, "Server IP", "Connection", JOptionPane.DEFAULT_OPTION);
 		if(ip != null && !ip.isEmpty()){
 			connectTo(ip);
 		}
@@ -169,7 +169,7 @@ public class GameOfLifeClient extends JFrame{
 		// Catch all exceptions here since SocketChannel open throw an exception.
 		catch (Exception e) {
 			if(isVisible()) {
-				JOptionPane.showMessageDialog(null, "Connection failed");
+				JOptionPane.showMessageDialog(this, "Connection failed", "Error", JOptionPane.ERROR_MESSAGE);
 			} else {
 				// If the game is not visible then it is running as a test and thus we want to log errors.
 				e.printStackTrace();
