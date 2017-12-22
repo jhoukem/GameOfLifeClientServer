@@ -101,7 +101,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		cellNeighborsToSurvive = new LabeledSlicerPanel("Cell requiered neighbors to survive", this);
 		cellNeighborsToSurvive.addSlicer("Low interval", Constants.MINIMUM_CELL_NEIGHBORS,
 				Constants.MAXIMUM_CELL_NEIGHBORS, null, 1, 0);
-		cellNeighborsToSurvive.addSlicer("Hight interval", Constants.MINIMUM_CELL_NEIGHBORS,
+		cellNeighborsToSurvive.addSlicer("High interval", Constants.MINIMUM_CELL_NEIGHBORS,
 				Constants.MAXIMUM_CELL_NEIGHBORS, null, 1, 0);
 
 		apparitionPercentageOnReset = new LabeledSlicerPanel("Chance for a cell to be alive on grid reset (in %)", null);
