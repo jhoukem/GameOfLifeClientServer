@@ -225,7 +225,7 @@ public class GridModel extends Observable {
 	}
 
 	public void setUpdateRate(int newUpdateRate) {
-		if(newUpdateRate >= Constants.MINIMUM_UPDATE_RATE && newUpdateRate < Constants.MAXIMUM_UPDATE_RATE){
+		if(newUpdateRate >= Constants.MINIMUM_UPDATE_RATE && newUpdateRate <= Constants.MAXIMUM_UPDATE_RATE){
 			this.updateRate = newUpdateRate;
 		}
 	}
