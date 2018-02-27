@@ -100,7 +100,7 @@ public class GameOfLifeServer extends JFrame{
 		}
 	}
 
-	public GridModel getGrid(){
+	public GridModel getModel(){
 		return gridModel;
 	}
 	

@@ -60,7 +60,7 @@ public class ServerGridController extends NetworkedGridController{
 			BitSet bs = gridModel.getWorldSnapShot();
 
 			// Create the snapshot message.
-			byte[] code = Constants.GRID_SNAPSHOT.getBytes();
+			byte[] code = ByteBuffer.allocate(Short.BYTES).putShort(Constants.GRID_SNAPSHOT).array();
 			byte[] snapshot = bs.toByteArray();
 			byte[] toSend = UtilsFunctions.concatArray(code, snapshot);
 
@@ -113,42 +113,35 @@ public class ServerGridController extends NetworkedGridController{
 	/**
 	 * Forge the initialization message that contains the all the current grid state.
 	 * 
-	 * TODO I should used something more clean rather than a string to convert int to byte array.
-	 * 
 	 * @return The initialization message sent to the client on first connection.
 	 */
 	public byte[] getInitializationMessage() {
 
-		byte[] code = Constants.GRID_INITIALIZATION.getBytes();
-
-		byte[] gridSize = new String(""+gridModel.getCurrentGridSize()).getBytes();
-		byte[] byteToReadForGridSize = {(byte) gridSize.length};
-
-		byte[] gridUpdateRate = new String(""+(int)gridModel.getUpdateRate()).getBytes();
-		byte[] byteToReadForUpdateRate = {(byte) gridUpdateRate.length};
-
-		byte[] minCellRequirement = new String(""+gridModel.getMinimumCellRequirement()).getBytes();
-		byte[] maxCellRequirement = new String(""+gridModel.getMaximumCellRequirement()).getBytes();
 		
-		byte[] apparitionPercentage = new String(""+(int)gridModel.getApparitionPercentage()).getBytes();
-		byte[] byteToReadForApparitionPercentage = {(byte) apparitionPercentage.length};
+		// Add the message code.
+		byte[] code = ByteBuffer.allocate(Short.BYTES).putShort(Constants.GRID_INITIALIZATION).array();
 
-		byte[] currentCycle = new String(""+gridModel.getCycle()).getBytes();
-		byte[] byteToReadForCurrentCycle = {(byte) currentCycle.length};
+		// Only allocate 1 byte because the size can never be bigger than 100.
+		byte[] gridSize = ByteBuffer.allocate(Short.BYTES).putShort((short)gridModel.getCurrentGridSize()).array();
+		
+		// The update rate only allocate 2 because we only need 13 bit (2 bytes) to store the update rate (which is 0 to 5000).
+		byte[] gridUpdateRate = ByteBuffer.allocate(Integer.BYTES).putInt((int)gridModel.getUpdateRate()).array();
+		byte[] minCellRequirement = ByteBuffer.allocate(Short.BYTES).putShort((short)gridModel.getMinimumCellRequirement()).array();
+		byte[] maxCellRequirement = ByteBuffer.allocate(Short.BYTES).putShort((short)gridModel.getMaximumCellRequirement()).array();
+		byte[] apparitionPercentage = ByteBuffer.allocate(Short.BYTES).putShort((short)gridModel.getApparitionPercentage()).array();
+		byte[] currentCycle = ByteBuffer.allocate(Integer.BYTES).putInt(gridModel.getCycle()).array();
 		
 		byte[] snapshot = gridModel.getWorldSnapShot().toByteArray();
 
 		if(DEBUG){
-			System.out.println("bytetoReadForGridSize size = "+ byteToReadForGridSize.length);
-			System.out.println("byte to read value = "+ byteToReadForGridSize[0]);
 			System.out.println("grid size length = "+gridSize.length);
 		}
 
-		return UtilsFunctions.concatArray(code, byteToReadForGridSize, gridSize,
-				byteToReadForUpdateRate, gridUpdateRate,
+		return UtilsFunctions.concatArray(code, gridSize,
+				gridUpdateRate,
 				minCellRequirement, maxCellRequirement,
-				byteToReadForApparitionPercentage, apparitionPercentage,
-				byteToReadForCurrentCycle, currentCycle,
+				apparitionPercentage,
+				currentCycle,
 				snapshot);
 	}
 

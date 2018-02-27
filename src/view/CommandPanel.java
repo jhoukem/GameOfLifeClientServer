@@ -146,11 +146,13 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 
 		if(ce.getSource().equals(gridSize.getSlider(GRID_SIZE_SLIDER_INDEX)) && !(gridSize.isSliderAdjusting(GRID_SIZE_SLIDER_INDEX))){
-			String cmd = Constants.CHANGE_GRID_SIZE_COMMAND + ":" + gridSize.getSliderValue(GRID_SIZE_SLIDER_INDEX);
+			byte[] cmd = ByteBuffer.allocate(Short.BYTES*2).putShort(Constants.CHANGE_GRID_SIZE_COMMAND).putShort(
+				(short)gridSize.getSliderValue(GRID_SIZE_SLIDER_INDEX)).array();
 			send(cmd);
 		} else if(ce.getSource().equals(gridUpdateRate.getSlider(GRID_UPDATE_RATE_SLIDER_INDEX)) &&
 				!gridUpdateRate.isSliderAdjusting(GRID_UPDATE_RATE_SLIDER_INDEX)){
-			String cmd = Constants.CHANGE_GRID_UPDATE_RATE_COMMAND + ":" + gridUpdateRate.getSliderValue(GRID_UPDATE_RATE_SLIDER_INDEX);
+			byte[] cmd = ByteBuffer.allocate(Short.BYTES * Integer.BYTES).putShort(Constants.CHANGE_GRID_UPDATE_RATE_COMMAND).putInt(
+					gridUpdateRate.getSliderValue(GRID_UPDATE_RATE_SLIDER_INDEX)).array();
 			send(cmd);
 		} else if(!concurrentModification && ce.getSource().equals(cellNeighborsToSurvive.getSlider(LOW_INTERVAL_SLIDER_INDEX)) &&
 				!cellNeighborsToSurvive.isSliderAdjusting(LOW_INTERVAL_SLIDER_INDEX)){
@@ -161,8 +163,9 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 				cellNeighborsToSurvive.setSliderValue(HIGHT_INTERVAL_SLIDER_INDEX, cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX));
 			}
 
-			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)+
-					":"+cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX);
+			byte[] cmd = ByteBuffer.allocate(Short.BYTES*3).putShort(Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND).putShort(
+					(short)cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)).putShort(
+							(short)cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX)).array();
 			send(cmd);
 
 			concurrentModification = false;
@@ -174,10 +177,10 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 				concurrentModification = true;
 				cellNeighborsToSurvive.setSliderValue(LOW_INTERVAL_SLIDER_INDEX, cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX));
 			}
-			String cmd = Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND + ":"+cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)+
-					":"+cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX);
+			byte[] cmd = ByteBuffer.allocate(Short.BYTES*3).putShort(Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND).putShort(
+					(short)cellNeighborsToSurvive.getSliderValue(LOW_INTERVAL_SLIDER_INDEX)).putShort(
+							(short)cellNeighborsToSurvive.getSliderValue(HIGHT_INTERVAL_SLIDER_INDEX)).array();
 			send(cmd);
-
 			concurrentModification = false;
 		}
 	}
@@ -192,9 +195,9 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 
 		if(ap.getSource().equals(reset)){
-			String cmd = Constants.RESET_GRID_COMMAND + ":" +
-					apparitionPercentageOnReset.getSliderValue(CELL_APPARITION_PERCENTAGE_SLIDER_INDEX);
-			send(cmd);
+			byte[] command = ByteBuffer.allocate(Short.BYTES*2).putShort(Constants.RESET_GRID_COMMAND).putShort(
+					(short)apparitionPercentageOnReset.getSliderValue(CELL_APPARITION_PERCENTAGE_SLIDER_INDEX)).array();
+			send(command);
 		}
 
 	}
@@ -204,7 +207,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 	 * 
 	 * @param command The command to send.
 	 */
-	private void send(String command) {
+	private void send(byte[] command) {
 
 		// Not connected yet.
 		if(clientSocket == null){
@@ -212,7 +215,7 @@ public class CommandPanel extends JPanel implements ActionListener, ChangeListen
 		}
 
 		try {
-			ByteBuffer buffer = ByteBuffer.wrap(command.getBytes());
+			ByteBuffer buffer = ByteBuffer.wrap(command);
 			clientSocket.write(buffer);
 		} catch (IOException e) {
 			e.printStackTrace();

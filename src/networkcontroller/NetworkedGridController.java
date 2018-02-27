@@ -1,5 +1,6 @@
 package networkcontroller;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import model.GridModel;
@@ -66,35 +67,54 @@ public abstract class NetworkedGridController {
 	 */
 	protected void processCommand(byte[] message) {
 
-		// Remove any trailing space.
-		String messageString = new String(message).trim();
-
-		String[] command = messageString.split(":");
-
-		switch (command[TYPE]) {
+		ByteBuffer buf = ByteBuffer.wrap(message);
+		int code = buf.getShort();
+		
+		switch (code) {
 		case Constants.CHANGE_GRID_SIZE_COMMAND:
-			if(command.length > 1){
-				processGridSizeChange(Integer.parseInt(command[DATA]));
+			if(message.length > 1){
+				processGridSizeChange(buf.getShort());
 			}
 			break;
+			
 		case Constants.CHANGE_GRID_UPDATE_RATE_COMMAND:
-			if(command.length > 1){
-				processGridUpdateRate(Integer.parseInt(command[DATA]));
+			if(message.length > 1){
+				processGridUpdateRate(buf.getInt());
 			}
 			break;
+			
 		case Constants.RESET_GRID_COMMAND:
-			processGridReset(Integer.parseInt(command[DATA]));
+			processGridReset(buf.getShort());
 			break;
+			
 		case Constants.CHANGE_GRID_CELL_REQUIREMENT_COMMAND:
-			processGridCellRequirement(Integer.parseInt(command[DATA]), 
-					Integer.parseInt(command[DATA+1]));
+			// Here we need to retrieve 2 values in the message.
+			int minValue = buf.getShort();
+			int maxValue = buf.getShort();
+			
+			processGridCellRequirement(minValue, maxValue);
 			break;
+			
 		case Constants.GRID_SET_CELL:
-			processSettingCell(Integer.parseInt(command[DATA]));
+			int cellPosition = buf.getInt();
+			processSettingCell(cellPosition);
+			break;
+			
 		default:
 			break;
 		}
 	}
+	
+	/**
+	 *  Return the code associated to the given message.
+	 *  
+	 * @param message
+	 * @return
+	 */
+	protected short getCodeFromMessage(byte[] message){
+		return ByteBuffer.wrap(message).getShort();
+	}
+	
 
 	protected void processSettingCell(int cellPosition) {
 		// Do nothing by default.

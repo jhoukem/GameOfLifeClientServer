@@ -1,5 +1,6 @@
 package networkcontroller;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -41,18 +42,18 @@ public class ClientGridController extends NetworkedGridController{
 				// When a command has been received, an update is necessary.
 				needUpdate = true;
 
-				if(isGridSnapshot(message)){
-					processGridSnapshot(message);
+				if(isWorldSnapshot(message)){
+					this.lastSnapshotMessageReceived = message;
+					// Skip the message code.
+					processGridSnapshot(Arrays.copyOfRange(message, Short.BYTES, message.length));
 				} else if(isWorldInit(message)){
 					processWorldInit(message);
 				} else {
 					processCommand(message);
 				}
-
 			}
 			pendingCommands.clear();
 		}
-
 		return needUpdate;
 	}
 
@@ -63,61 +64,34 @@ public class ClientGridController extends NetworkedGridController{
 	 */
 	private void processWorldInit(byte[] message) {
 
-		int offset = 0;
+		ByteBuffer buffer = ByteBuffer.wrap(message);
+		
+		// Skip the first 2 byte (message code).
+		buffer.position(Short.BYTES);
+		
+		short currentGridSize = buffer.getShort();
+		int currentUpdateRate =  buffer.getInt();
+		int min = buffer.getShort();
+		int max = buffer.getShort();
+		int apparitionPercentage = buffer.getShort();
+		int cycle = buffer.getInt();
 
-		// This size allow us to know how many byte are used to store the grid size.
-		byte sizeToReadGridSize = message[1];
-
-		offset = 2;
-		// Set the grid size.
-		int currentGridSize = Integer.parseInt(new String(message, offset, sizeToReadGridSize));
-
-		// Increase the offset by the number of byte read.
-		offset += sizeToReadGridSize;
-
+		// Update the model accordingly.
 		gridModel.setCurrentSize(currentGridSize);
+		gridModel.setCellRequirement(min, max);
+		gridModel.setCellApparitionPercentage(apparitionPercentage);
+		gridModel.setCurrentCycle(cycle);
 
 		// Update the GUI.
 		commandPanel.setCurrentGridSize(currentGridSize);
-
-		// Set the grid update rate.
-		// This size allow us to know how many byte are used to store the grid size.
-		byte sizeToReadUpdateRate = message[offset];
-		// Increase the offset by the number of byte read.
-		offset += 1;
-
-		int currentUpdateRate = Integer.parseInt(new String(message, offset, sizeToReadUpdateRate));
-		// Increase the offset by the number of byte read.
-		offset += sizeToReadUpdateRate;
-		gridModel.setCurrentSize(currentGridSize);
 		commandPanel.setCurrentUpdateRate(currentUpdateRate);
-
-		// Set the interval for a cell to survive.
-		int min = Integer.parseInt(new String(message, offset++, 1));
-		int max = Integer.parseInt(new String(message, offset++, 1));
-		gridModel.setCellRequirement(min, max);
 		commandPanel.setCellRequirement(min, max);
-
-		// This size allow us to know how many byte are used to store the cell apparition percentage.
-		byte sizeToReadApparitionPercentage = message[offset++];
-		int apparitionPercentage = Integer.parseInt(new String(message, offset, sizeToReadApparitionPercentage));
-		// Increase the offset by the number of byte read.
-		offset += sizeToReadApparitionPercentage;
-		gridModel.setCellApparitionPercentage(apparitionPercentage);
 		commandPanel.setApparitionPercentage(apparitionPercentage);
-
-
-		// This size allow us to know how many byte are used to store the grid cycle number.
-		byte sizeToReadCurrentCycle = message[offset++];
-		int cycle = Integer.parseInt(new String(message, offset, sizeToReadCurrentCycle));
-		// Increase the offset by the number of byte read.
-		offset += sizeToReadCurrentCycle;
-
-		gridModel.setCurrentCycle(cycle);
 		updateLabelCycle();
-
+		
+		
 		// Initialize the grid tab.
-		byte[] snapshot = Arrays.copyOfRange(message, offset, message.length);
+		byte[] snapshot = Arrays.copyOfRange(message, buffer.position(), message.length);
 		processGridSnapshot(snapshot);
 	}
 
@@ -155,15 +129,11 @@ public class ClientGridController extends NetworkedGridController{
 	/**
 	 * Parse the server message, get the server snapshot and fill the grid with it.
 	 * 
-	 * @param message the data send by the server.
+	 * @param snapShot the data send by the server.
 	 */
-	private void processGridSnapshot(byte[] message) {
+	private void processGridSnapshot(byte[] snapShot) {
 
-		this.lastSnapshotMessageReceived = message;
-
-		// Remove the message code to only keep the snapshot.
-		byte[] snapshotByte = Arrays.copyOfRange(message, 1, message.length);
-		BitSet bitField = BitSet.valueOf(snapshotByte);
+		BitSet bitField = BitSet.valueOf(snapShot);
 
 		gridModel.populateWithSnapshot(bitField);
 		gridModel.incrementCycle();
@@ -179,18 +149,17 @@ public class ClientGridController extends NetworkedGridController{
 	 * @return whether the current message concern a world initialization
 	 */
 	private boolean isWorldInit(byte[] message) {
-		String code = new String(message, 0, 1);
-		return code.equals(Constants.GRID_INITIALIZATION);
+		return getCodeFromMessage(message) == Constants.GRID_INITIALIZATION;
 	}
 
 	/**
 	 * @param message the data send by the server.
 	 * @return whether the current message concern a world snapshot.
 	 */
-	private boolean isGridSnapshot(byte[] message) {
-		String code = new String(message, 0, 1);
-		return code.equals(Constants.GRID_SNAPSHOT);
+	private boolean isWorldSnapshot(byte[] message) {
+		return getCodeFromMessage(message) == Constants.GRID_SNAPSHOT;
 	}
+	
 
 	/**
 	 * @return the last saved snapshot and delete its reference in this class so another call to this method

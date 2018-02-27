@@ -205,5 +205,9 @@ public class GameOfLifeClient extends JFrame{
 	public ClientGridController getClientController(){
 		return clientController;
 	}
+	
+	public GridModel getModel(){
+		return gridModel;
+	}
 
 }

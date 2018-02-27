@@ -1,5 +1,6 @@
 package test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import game.GameOfLifeClient;
@@ -33,13 +34,22 @@ public class WorldSnapshotUpdateTest {
 		GameOfLifeClient client = new GameOfLifeClient(false);
 
 		// Set up the client/server.
-		server.getGrid().setCurrentSize(GRID_SIZE_FOR_TEST);
+		server.getModel().setCurrentSize(GRID_SIZE_FOR_TEST);
 		client.connectTo(LOCALHOST);
-		
+
 		for (int i = 0; i < ITERATION; i++) {
-			server.getGrid().resetGrid();
-			server.getGrid().populateRandomly();
+			server.getModel().resetGrid();
+			server.getModel().populateRandomly();
 			testSendReceive(server, client);
+			testModelMatch(server, client);
+		}
+	}
+
+	private void testModelMatch(GameOfLifeServer server, GameOfLifeClient client) {
+		for(int i = 0; i < server.getModel().getCurrentGridSize(); i++){
+			for(int j = 0; j < server.getModel().getCurrentGridSize(); j++){
+				assertEquals(server.getModel().getGrid()[i][j], client.getModel().getGrid()[i][j]);
+			}
 		}
 	}
 
@@ -50,12 +60,12 @@ public class WorldSnapshotUpdateTest {
 	 * @param client
 	 */
 	private void testSendReceive(GameOfLifeServer server, GameOfLifeClient client) {
-		
+
 		for (int i = 0; i < NUMBER_OF_SIMULATION_PER_ITERATION; i++) {
-			
+
 			// Update the server grid.
-			server.getGrid().update();
-			
+			server.getModel().update();
+
 			// Send a world snapshot to the client.
 			byte[] send = server.getServerGridController().sendWorldSnapShotToClients();
 

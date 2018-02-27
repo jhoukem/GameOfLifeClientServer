@@ -51,11 +51,11 @@ public class ClientGridView extends GridView implements MouseListener {
 			int x = (int)(touchPoint.getX() - widthPadding) / cellSize;
 
 			int cellPosition = gridModel.getCurrentGridSize() * y + x;
-			String command = Constants.GRID_SET_CELL+":"+cellPosition;
+			byte[] command = ByteBuffer.allocate(Short.BYTES+Integer.BYTES).putShort(Constants.GRID_SET_CELL).putInt(cellPosition).array();
 			
 			try {
 				// Send the message to the server.
-				clientSocket.write(ByteBuffer.wrap(command.getBytes()));
+				clientSocket.write(ByteBuffer.wrap(command));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
